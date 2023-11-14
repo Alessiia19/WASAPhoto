@@ -1,0 +1,838 @@
+openapi: 3.0.3
+info:
+  title: WASAPhoto API
+  description: |-
+    Keep in touch with your friends by sharing photos of special moments, thanks to 
+    WASAPhoto! You can upload your photos directly from your PC, and they will be 
+    to everyone following you.
+  version: 1.0.0
+
+tags:
+  - name: Login
+    description: User authentication for accessing the platform.
+  - name: User
+    description: Everything about users.
+  - name: Photos
+    description: Everything about photos.
+  
+components:
+  securitySchemes:
+    # Bearer authentication using the user identifier instead of the token
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token containing the userID.
+    
+  schemas:
+  
+    UserID:
+      description: user ID
+      type: string
+      pattern: '^[a-zA-Z0-9_\-\.]+$'
+      minLength: 3
+      maxLength: 16
+      example: abcdef01234_
+      
+    Photo:
+      description: |- 
+        Photo object that includes the author's name, the image URL, the number of
+        likes and comments, and details about users who liked or commented, including
+        the comments themselves.
+      type: object
+      properties:
+      
+        author:
+          type: string
+          description: Username of the user who posted the photo.
+          example: Maria
+          pattern: '^[a-zA-Z0-9]+$'
+          minLength: 3
+          maxLength: 16
+        
+        photoID:
+          type: string
+          description: ID of the photo.
+          example: photo1234
+          pattern: '^[a-zA-Z0-9_\-\.]+$'
+          minLength: 3
+          maxLength: 16
+          
+        imageData:
+          type: string
+          description: Binary data representing the image.
+          format: binary
+      
+        uploadDate:
+          type: string
+          description: The date and time when the upload occurred.
+          format: date-time
+          example: 2023-11-09T15:30:00Z
+          
+        likesCount:
+          type: integer
+          description: number of likes
+          example: 12
+          
+        whoLiked:
+          type: array
+          items:
+            type: string
+            description: ID of the user who liked the photo
+            example: user1234
+          minItems: 0
+            
+        commentsCount:
+          type: integer
+          description: number of comments
+          example: 3
+          
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              userID:
+                type: string
+                description: User ID of the user who commented
+                pattern: '^[a-zA-Z0-9_\-\.]+$'
+                minLength: 3
+                maxLength: 16
+                example: user1234
+              comment:
+                type: string
+                description: Comment on a photo
+                pattern: '^[a-zA-Z0-9_\-\.]+$'
+                minLength: 1
+                example: Beautiful photo!
+          minItems: 0
+                
+  responses:
+  
+    UnauthorizedError:
+      description: user ID is missing or invalid
+      content:
+        application/json:
+          schema:
+            description: JSON object containing an error message
+            type: object
+            properties:
+              message:
+                description: error message
+                type: string
+                example: Invalid user ID supplied
+                    
+    InvalidSyntax:
+      description: Invalid syntax
+      content:
+        application/json:
+          schema:
+            description: JSON object containing an error message
+            type: object
+            properties:
+              message:
+                description: error message
+                type: string
+                example: Invalid username format. Please follow the specified                requirements.
+    InvalidRequest: 
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            description: JSON object containing an error message
+            type: object
+            properties:
+              message:
+                description: error message
+                type: string
+                example: Invalid request
+    
+    NotFoundError:
+      description: Element not found
+      content:
+        application/json:
+          schema: 
+            description: JSON object containing an error message
+            type: object
+            properties:
+              message:
+                description: error message
+                type: string
+                example: Element not found
+          
+    
+security:
+  - bearerAuth: []
+  
+paths:
+  /session:
+    post:
+      tags: ["Login"]
+      summary: Logs in the user
+      description: |-
+        If the user does not exist, it will be created,
+        and an identifier is returned.
+        If the user exists, the user identifier is returned.
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+         application/json:
+          schema:
+            description: JSON object containing the username
+            type: object
+            properties:
+              name:
+                description: username
+                type: string
+                example: Maria
+                pattern: '^[a-zA-Z0-9]+$'
+                minLength: 3
+                maxLength: 16
+        required: true
+        
+      responses:
+        '201':
+          description: User log-in action successful
+          content:
+           application/json:
+             schema:
+                description: JSON object containing the user ID
+                type: object
+                properties:
+                  identifier:
+                    description: user ID
+                    type: string
+                    example: abcdef012345_
+        
+        '400':
+          $ref: '#/components/responses/InvalidSyntax'
+  
+  /user/{userID}/username:
+    put:
+      tags: ["User"]
+      summary: Sets the username
+      description: The user can change their username.
+      operationId: setMyUsername
+      requestBody:
+        description: User's username
+        required: true
+        content:
+          application/json:
+            schema:
+              description: JSON object containing the username
+              type: object
+              properties:
+                name:
+                  description: username
+                  type: string
+                  example: Maria
+                  pattern: '^[a-zA-Z0-9]+$'
+                  minLength: 3
+                  maxLength: 16
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            $ref: '#/components/schemas/UserID'
+                  
+      responses:
+        '200':
+          description: Username changed successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+        
+        '400':
+          $ref: '#/components/responses/InvalidSyntax'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /user/{userID}/photos:
+    post:
+      tags: ["User"]
+      summary: Uploads a photo
+      description: |- 
+        The user can post a new photo on their profile. Photos will be presented in
+        reverse chronological order.
+      operationId: uploadPhoto
+      requestBody:
+        description: Photo that the user wants to upload.
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Photo'
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
+      
+      responses:
+        '201':
+          description: Photo uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /user/{userID}/follow:
+    put:
+      tags: ["User"]
+      summary: Follows specified user
+      description: Users can follow others to view and interact with their photos.
+      operationId: followUser
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
+      requestBody:
+        description: ID of the user you want to follow.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserID'
+            
+                    
+      responses:
+        '201':
+          description: User followed successfully
+          content:
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+                  
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/{userID}/follow/{followingID}:
+    delete:
+      tags: ["User"]
+      summary: Unfollows specified user
+      description: |-
+        Users can unfollow someone they were previously following to stop seeing
+        their photos.
+      operationId: unfollowUser
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
+        - name: followingID
+          in: path
+          required: true
+          description: ID of the user you want to unfollow.
+          schema:
+            $ref: '#/components/schemas/UserID'
+        
+        
+                    
+      responses:
+        '201':
+          description: User unfollowed successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/{userID}/ban:
+    put:
+      tags: ["User"]
+      summary: Blocks specified user
+      description: |-
+        Users can block other one to prevent them from seeing any information
+        about them.
+      operationId: banUser
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
+      requestBody:
+        description: ID of the user you want to unban.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserID'
+                    
+      responses:
+        '201':
+          description: User banned successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/{userID}/ban/{userBannedID}:
+    delete:
+      tags: ["User"]
+      summary: Unblocks specified user
+      description: Unblocking a user allows them to view your profile information.
+      operationId: unbanUser
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
+        - name: userBannedID
+          in: path
+          required: true
+          description: ID of the user you want to unban.
+          schema:
+            $ref: '#/components/schemas/UserID'
+                    
+      responses:
+        '201':
+          description: User unbanned successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/{userID}/profile/{searchedUserID}:
+    get:
+      tags: ["User"]
+      summary: View the profile of the specified user
+      description: |-
+        The user's personal profile page displays their photos and the number of
+        followers, following and uploaded photos. A user can search other user
+        profiles via username.
+      operationId: getUserProfile
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
+        - name: searchedUserID
+          in: path
+          required: true
+          description: ID of the user searched.
+          schema:
+            $ref: '#/components/schemas/UserID'
+      
+
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            multipart/form-data:
+              schema:
+                description: returns the array containing all the photos and details
+                type: object
+                properties:
+                  photos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Photo'
+                      
+                  
+            application/json:
+              schema:
+                description: |-
+                  JSON object containing the number of photos posted, followers and
+                  following
+                type: object
+                properties:
+                  photosCount:
+                    type: integer
+                    description: Number of photos posted by the user
+                  followersCount:
+                    type: integer
+                    description: Number of followers
+                  followingCount:
+                    type: integer
+                    description: Number of users being followed
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /user/myStream:
+    get:
+      tags: ["User"]
+      summary: View the user's stream
+      description: |-
+        The stream is composed by photos from “following” in reverse chronological
+        order.
+      operationId: getMyStream
+        
+      responses:
+        '200':
+          description: OK
+          content:
+            multipart/form-data:
+              schema:
+                description: returns the array containing all the photos and details
+                type: object
+                properties:
+                  photos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Photo'
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /photos/{photoID}/like:
+    put:
+      tags: ["Photos"]
+      summary: Likes a specified photo
+      description: Users can put likes to all the photos they want
+      operationId: likePhoto
+      parameters:
+        - name: photoID
+          in: path
+          required: true
+          description: ID of the photo you want to like.
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+                    
+      responses:
+        '201':
+          description: Photo liked successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+          
+  /photos/{photoID}/like/{likeID}:
+    delete:
+      tags: ["Photos"]
+      summary: Unlikes a specified photo
+      description: Users can remove likes to photos
+      operationId: unlikePhoto
+      parameters:
+        - name: photoID
+          in: path
+          required: true
+          description: ID of the photo you want to unlike.
+          schema:
+            description: photo ID
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+        - name: likeID
+          in: path
+          required: true
+          description: ID of the like you want to remove.
+          schema:
+            description: like ID
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+                    
+      responses:
+        '201':
+          description: Photo unliked successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /photos/{photoID}/comment:
+    post:
+      tags: ["Photos"]
+      summary: Comment a specified photo
+      description: Users can comment photos published by them and by others
+      operationId: commentPhoto
+      parameters:
+        - name: photoID
+          in: path
+          required: true
+          description: ID of the photo you want to comment.
+          schema:
+            description: photo ID
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+      requestBody:
+        description: Your comment.
+        required: true
+        content:
+          application/json:
+            schema:
+              description: JSON object containing the comment
+              type: object
+              properties:
+                comment:
+                  description: comment string
+                  type: string
+                  pattern: '^[a-zA-Z0-9_\-\.]+$'
+                  minLength: 3
+                  maxLength: 16
+                  example: Beautiful Photo!
+                    
+      responses:
+        '201':
+          description: Photo commented successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing the user and their comment
+                type: object
+                properties:
+                  authorID: 
+                    type: string
+                    pattern: '^[a-zA-Z0-9_\-\.]+$'
+                    minLength: 3
+                    maxLength: 16
+                    description: ID of the user who commented
+                    example: user1234
+                  comment:
+                    description: comment string
+                    type: string
+                    pattern: '^[a-zA-Z0-9_\-\.]+$'
+                    minLength: 3
+                    maxLength: 16
+                    example: Beautiful Photo!
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /photos/{photoID}/comment/{commentID}:
+    delete:
+      tags: ["Photos"]
+      summary: Deletes a comment
+      description: |-
+        Removes the comment with the specified ID under the specified photo. Only authors can remove their comment.
+      operationId: uncommentPhoto
+      parameters:
+        - name: photoID
+          in: path
+          required: true
+          description: ID of the photo where the comment to be removed is located.
+          schema:
+            description: photo ID
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+        - name: commentID
+          in: path
+          required: true
+          description: ID of the comment you want to remove
+          schema:
+            description: comment ID
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+            
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+          
+  /photos/{photoID}:
+    delete:
+      tags: ["Photos"]
+      summary: Deletes a photo
+      description: |-
+        Removes the specified photo. This operation will also remove all associated 
+        likes and comments.
+      operationId: deletePhoto
+      parameters:
+        - name: photoID
+          in: path
+          required: true
+          description: ID of the photo you want to remove.
+          schema:
+            description: photo ID
+            type: string
+            pattern: '^[a-zA-Z0-9_\-\.]+$'
+            minLength: 3
+            maxLength: 16
+            example: abcdef012345
+      
+      responses:
+        '200':
+          description: Photo deleted successfully
+          content: 
+            application/json:
+              schema:
+                description: JSON object containing a success message
+                type: object
+                properties:
+                  message:
+                    description: OK message
+                    type: string
+                    example: OK
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      
+      
+
+
+
+
+
+
+
+
+
