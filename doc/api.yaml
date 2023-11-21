@@ -61,12 +61,16 @@ components:
           type: string
           description: Binary data representing the image.
           format: binary
+          minLength: 1
+          maxLength: 5000
       
         uploadDate:
           type: string
           description: The date and time when the upload occurred.
           format: date-time
           example: 2023-11-09T15:30:00Z
+          minLength: 1
+          maxLength: 35
           
         likesCount:
           type: integer
@@ -75,11 +79,11 @@ components:
           
         whoLiked:
           type: array
-          items:
-            type: string
-            description: ID of the user who liked the photo
-            example: user1234
           minItems: 0
+          maxItems: 5000
+          description: Contains the user IDs of all users who have liked.
+          items:
+            $ref: '#/components/schemas/UserID'
             
         commentsCount:
           type: integer
@@ -88,6 +92,11 @@ components:
           
         comments:
           type: array
+          description: |-
+            Contains the user IDs of all users who have commented along with their
+            respective comments.
+          minItems: 0
+          maxItems: 5000
           items:
             type: object
             properties:
@@ -101,10 +110,10 @@ components:
               comment:
                 type: string
                 description: Comment on a photo
-                pattern: '^[a-zA-Z0-9_\-\.]+$'
+                pattern: '^.*$'
                 minLength: 1
+                maxLength: 5000
                 example: Beautiful photo!
-          minItems: 0
                 
   responses:
   
@@ -113,7 +122,7 @@ components:
       content:
         application/json:
           schema:
-            description: JSON object containing an error message
+            description: Contains an error message
             type: object
             properties:
               message:
@@ -126,7 +135,7 @@ components:
       content:
         application/json:
           schema:
-            description: JSON object containing an error message
+            description: Contains an error message
             type: object
             properties:
               message:
@@ -138,7 +147,7 @@ components:
       content:
         application/json:
           schema:
-            description: JSON object containing an error message
+            description: Contains an error message
             type: object
             properties:
               message:
@@ -151,7 +160,7 @@ components:
       content:
         application/json:
           schema: 
-            description: JSON object containing an error message
+            description: Contains an error message
             type: object
             properties:
               message:
@@ -178,7 +187,7 @@ paths:
         content:
          application/json:
           schema:
-            description: JSON object containing the username
+            description: Contains the username
             type: object
             properties:
               name:
@@ -196,7 +205,7 @@ paths:
           content:
            application/json:
              schema:
-                description: JSON object containing the user ID
+                description: Contains the user ID
                 type: object
                 properties:
                   identifier:
@@ -207,19 +216,19 @@ paths:
         '400':
           $ref: '#/components/responses/InvalidSyntax'
   
-  /user/{userID}/username:
+  /users/{userID}/username:
     put:
       tags: ["User"]
       summary: Sets the username
       description: The user can change their username.
-      operationId: setMyUsername
+      operationId: setMyUserName
       requestBody:
         description: User's username
         required: true
         content:
           application/json:
             schema:
-              description: JSON object containing the username
+              description: Contains the username
               type: object
               properties:
                 name:
@@ -243,7 +252,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
@@ -257,7 +266,7 @@ paths:
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
-  /user/{userID}/photos:
+  /users/{userID}/photos:
     post:
       tags: ["User"]
       summary: Uploads a photo
@@ -291,10 +300,10 @@ paths:
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
-  /user/{userID}/follow:
+  /users/{userID}/following:
     put:
       tags: ["User"]
-      summary: Follows specified user
+      summary: Adds a user to the following list of the specified user
       description: Users can follow others to view and interact with their photos.
       operationId: followUser
       parameters:
@@ -319,7 +328,7 @@ paths:
           content:
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 properties:
                   message:
                     description: OK message
@@ -336,10 +345,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /user/{userID}/follow/{followingID}:
+  /users/{userID}/following/{followingID}:
     delete:
       tags: ["User"]
-      summary: Unfollows specified user
+      summary: Removes a user from the following list of the specified user
       description: |-
         Users can unfollow someone they were previously following to stop seeing
         their photos.
@@ -366,7 +375,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
@@ -383,10 +392,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /user/{userID}/ban:
+  /users/{userID}/banned:
     put:
       tags: ["User"]
-      summary: Blocks specified user
+      summary: Adds a user to the list of users banned by the specified user
       description: |-
         Users can block other one to prevent them from seeing any information
         about them.
@@ -412,7 +421,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
@@ -429,10 +438,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /user/{userID}/ban/{userBannedID}:
+  /users/{userID}/banned/{userBannedID}:
     delete:
       tags: ["User"]
-      summary: Unblocks specified user
+      summary: Removes a user from the list of users banned by the specified user
       description: Unblocking a user allows them to view your profile information.
       operationId: unbanUser
       parameters:
@@ -455,7 +464,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
@@ -472,10 +481,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /user/{userID}/profile/{searchedUserID}:
+  /users/{userID}/profile:
     get:
       tags: ["User"]
-      summary: View the profile of the specified user
+      summary: View the profile of an user
       description: |-
         The user's personal profile page displays their photos and the number of
         followers, following and uploaded photos. A user can search other user
@@ -486,12 +495,6 @@ paths:
           in: path
           required: true
           description: ID of the user.
-          schema:
-            $ref: '#/components/schemas/UserID'
-        - name: searchedUserID
-          in: path
-          required: true
-          description: ID of the user searched.
           schema:
             $ref: '#/components/schemas/UserID'
       
@@ -508,6 +511,9 @@ paths:
                 properties:
                   photos:
                     type: array
+                    description: Contains all the photos and details
+                    minItems: 0
+                    maxItems: 5000
                     items:
                       $ref: '#/components/schemas/Photo'
                       
@@ -515,7 +521,7 @@ paths:
             application/json:
               schema:
                 description: |-
-                  JSON object containing the number of photos posted, followers and
+                  Contains the number of photos posted, followers and
                   following
                 type: object
                 properties:
@@ -538,7 +544,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /user/myStream:
+  /users/stream:
     get:
       tags: ["User"]
       summary: View the user's stream
@@ -558,6 +564,9 @@ paths:
                 properties:
                   photos:
                     type: array
+                    description: Contains all the photos and details
+                    minItems: 0
+                    maxItems: 5000
                     items:
                       $ref: '#/components/schemas/Photo'
           
@@ -567,10 +576,10 @@ paths:
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
-  /photos/{photoID}/like:
+  /photos/{photoID}/likes:
     put:
       tags: ["Photos"]
-      summary: Likes a specified photo
+      summary: Adds a like to the specified photo
       description: Users can put likes to all the photos they want
       operationId: likePhoto
       parameters:
@@ -591,10 +600,11 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
+                    description: OK message
                     type: string
                     example: OK
           
@@ -607,10 +617,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
           
-  /photos/{photoID}/like/{likeID}:
+  /photos/{photoID}/likes/{likeID}:
     delete:
       tags: ["Photos"]
-      summary: Unlikes a specified photo
+      summary: Removes a specific like from the specified photo
       description: Users can remove likes to photos
       operationId: unlikePhoto
       parameters:
@@ -643,7 +653,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
@@ -660,10 +670,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /photos/{photoID}/comment:
+  /photos/{photoID}/comments:
     post:
       tags: ["Photos"]
-      summary: Comment a specified photo
+      summary: Adds a comment to the specified photo
       description: Users can comment photos published by them and by others
       operationId: commentPhoto
       parameters:
@@ -684,13 +694,13 @@ paths:
         content:
           application/json:
             schema:
-              description: JSON object containing the comment
+              description: Contains the comment
               type: object
               properties:
                 comment:
                   description: comment string
                   type: string
-                  pattern: '^[a-zA-Z0-9_\-\.]+$'
+                  pattern: '^.*$'
                   minLength: 3
                   maxLength: 16
                   example: Beautiful Photo!
@@ -701,7 +711,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing the user and their comment
+                description: Contains the user and their comment
                 type: object
                 properties:
                   authorID: 
@@ -714,7 +724,7 @@ paths:
                   comment:
                     description: comment string
                     type: string
-                    pattern: '^[a-zA-Z0-9_\-\.]+$'
+                    pattern: '^.*$'
                     minLength: 3
                     maxLength: 16
                     example: Beautiful Photo!
@@ -728,10 +738,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /photos/{photoID}/comment/{commentID}:
+  /photos/{photoID}/comments/{commentID}:
     delete:
       tags: ["Photos"]
-      summary: Deletes a comment
+      summary: Removes a specific comment from the specified photo
       description: |-
         Removes the comment with the specified ID under the specified photo. Only authors can remove their comment.
       operationId: uncommentPhoto
@@ -765,7 +775,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
@@ -809,7 +819,7 @@ paths:
           content: 
             application/json:
               schema:
-                description: JSON object containing a success message
+                description: Contains a success message
                 type: object
                 properties:
                   message:
