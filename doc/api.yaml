@@ -33,6 +33,14 @@ components:
       maxLength: 16
       example: user1234
     
+    Username:
+      description: username
+      type: string
+      example: Maria
+      pattern: '^[a-zA-Z0-9]+$'
+      minLength: 3
+      maxLength: 16
+                  
     PhotoID:
       type: string
       description: ID of the photo.
@@ -56,6 +64,13 @@ components:
       minLength: 3
       maxLength: 16
       example: comment1234
+    
+    ImageData:
+      type: string
+      description: Binary data representing the image.
+      format: binary
+      minLength: 1
+      maxLength: 5000
       
     Photo:
       description: |- 
@@ -66,22 +81,13 @@ components:
       properties:
       
         author:
-          type: string
-          description: Username of the user who posted the photo.
-          example: Maria
-          pattern: '^[a-zA-Z0-9]+$'
-          minLength: 3
-          maxLength: 16
+          $ref: '#/components/schemas/Username'
         
         photoID:
           $ref: '#/components/schemas/PhotoID'
           
         imageData:
-          type: string
-          description: Binary data representing the image.
-          format: binary
-          minLength: 1
-          maxLength: 5000
+          $ref: '#/components/schemas/ImageData'
       
         uploadDate:
           type: string
@@ -120,12 +126,9 @@ components:
             type: object
             properties:
               userID:
-                type: string
-                description: User ID of the user who commented
-                pattern: '^[a-zA-Z0-9_\-\.]+$'
-                minLength: 3
-                maxLength: 16
-                example: user1234
+                $ref: '#/components/schemas/UserID'
+              commentID:
+                $ref: '#/components/schemas/CommentID'
               comment:
                 type: string
                 description: Comment on a photo
@@ -210,12 +213,7 @@ paths:
             type: object
             properties:
               name:
-                description: username
-                type: string
-                example: Maria
-                pattern: '^[a-zA-Z0-9]+$'
-                minLength: 3
-                maxLength: 16
+                $ref: '#/components/schemas/Username'
         required: true
         
       responses:
@@ -251,12 +249,7 @@ paths:
               type: object
               properties:
                 name:
-                  description: username
-                  type: string
-                  example: Maria
-                  pattern: '^[a-zA-Z0-9]+$'
-                  minLength: 3
-                  maxLength: 16
+                  $ref: '#/components/schemas/Username'
       parameters:
         - name: userID
           in: path
@@ -294,12 +287,12 @@ paths:
         reverse chronological order.
       operationId: uploadPhoto
       requestBody:
-        description: Photo that the user wants to upload.
+        description: URL of the photo that the user wants to upload.
         required: true
         content: 
           application/json:
             schema:
-              $ref: '#/components/schemas/Photo'
+              $ref: '#/components/schemas/ImageData'
       parameters:
         - name: userID
           in: path
@@ -411,7 +404,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/banned:
+  /users/{userID}/banned_users:
     put:
       tags: ["User"]
       summary: Adds a user to the list of users banned by the specified user
@@ -457,7 +450,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/banned/{userBannedID}:
+  /users/{userID}/banned_users/{userBannedID}:
     delete:
       tags: ["User"]
       summary: Removes a user from the list of users banned by the specified user
@@ -711,16 +704,13 @@ paths:
           content: 
             application/json:
               schema:
-                description: Contains the user and their comment
+                description: Contains the user and their comment with its ID
                 type: object
                 properties:
                   authorID: 
-                    type: string
-                    pattern: '^[a-zA-Z0-9_\-\.]+$'
-                    minLength: 3
-                    maxLength: 16
-                    description: ID of the user who commented
-                    example: user1234
+                    $ref: '#/components/schemas/UserID'
+                  commentID:
+                    $ref: '#/components/schemas/CommentID'
                   comment:
                     description: comment string
                     type: string
