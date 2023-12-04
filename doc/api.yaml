@@ -31,7 +31,31 @@ components:
       pattern: '^[a-zA-Z0-9_\-\.]+$'
       minLength: 3
       maxLength: 16
-      example: abcdef01234_
+      example: user1234
+    
+    PhotoID:
+      type: string
+      description: ID of the photo.
+      example: photo1234
+      pattern: '^[a-zA-Z0-9_\-\.]+$'
+      minLength: 3
+      maxLength: 16
+    
+    LikeID:
+      description: like ID
+      type: string
+      pattern: '^[a-zA-Z0-9_\-\.]+$'
+      minLength: 3
+      maxLength: 16
+      example: like1234
+    
+    CommentID:
+      description: comment ID
+      type: string
+      pattern: '^[a-zA-Z0-9_\-\.]+$'
+      minLength: 3
+      maxLength: 16
+      example: comment1234
       
     Photo:
       description: |- 
@@ -50,12 +74,7 @@ components:
           maxLength: 16
         
         photoID:
-          type: string
-          description: ID of the photo.
-          example: photo1234
-          pattern: '^[a-zA-Z0-9_\-\.]+$'
-          minLength: 3
-          maxLength: 16
+          $ref: '#/components/schemas/PhotoID'
           
         imageData:
           type: string
@@ -588,11 +607,7 @@ paths:
           required: true
           description: ID of the photo you want to like.
           schema:
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/PhotoID'
                     
       responses:
         '201':
@@ -629,23 +644,13 @@ paths:
           required: true
           description: ID of the photo you want to unlike.
           schema:
-            description: photo ID
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/PhotoID'
         - name: likeID
           in: path
           required: true
           description: ID of the like you want to remove.
           schema:
-            description: like ID
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/LikeID'
                     
       responses:
         '201':
@@ -682,12 +687,7 @@ paths:
           required: true
           description: ID of the photo you want to comment.
           schema:
-            description: photo ID
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/PhotoID'
       requestBody:
         description: Your comment.
         required: true
@@ -751,23 +751,13 @@ paths:
           required: true
           description: ID of the photo where the comment to be removed is located.
           schema:
-            description: photo ID
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/PhotoID'
         - name: commentID
           in: path
           required: true
           description: ID of the comment you want to remove
           schema:
-            description: comment ID
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/CommentID'
             
       responses:
         '200':
@@ -806,12 +796,7 @@ paths:
           required: true
           description: ID of the photo you want to remove.
           schema:
-            description: photo ID
-            type: string
-            pattern: '^[a-zA-Z0-9_\-\.]+$'
-            minLength: 3
-            maxLength: 16
-            example: abcdef012345
+            $ref: '#/components/schemas/PhotoID'
       
       responses:
         '200':
