@@ -1,4 +1,6 @@
 openapi: 3.0.3
+servers:
+  - url: "http://localhost:3000"
 info:
   title: WASAPhoto API
   description: |-
@@ -27,11 +29,8 @@ components:
   
     UserID:
       description: user ID
-      type: string
-      pattern: '^[a-zA-Z0-9_\-\.]+$'
-      minLength: 3
-      maxLength: 16
-      example: user1234
+      type: integer
+      example: 1234
     
     Username:
       description: username
@@ -42,28 +41,19 @@ components:
       maxLength: 16
                   
     PhotoID:
-      type: string
+      type: integer
       description: ID of the photo.
-      example: photo1234
-      pattern: '^[a-zA-Z0-9_\-\.]+$'
-      minLength: 3
-      maxLength: 16
+      example: 1234
     
     LikeID:
       description: like ID
-      type: string
-      pattern: '^[a-zA-Z0-9_\-\.]+$'
-      minLength: 3
-      maxLength: 16
-      example: like1234
+      type: integer
+      example: 1234
     
     CommentID:
       description: comment ID
-      type: string
-      pattern: '^[a-zA-Z0-9_\-\.]+$'
-      minLength: 3
-      maxLength: 16
-      example: comment1234
+      type: integer
+      example: 1234
     
     ImageData:
       type: string
@@ -163,7 +153,7 @@ components:
               message:
                 description: error message
                 type: string
-                example: Invalid username format. Please follow the specified                requirements.
+                example: Invalid username format. Please follow the specified requirements.
     InvalidRequest: 
       description: Invalid request
       content:
@@ -222,18 +212,21 @@ paths:
           content:
            application/json:
              schema:
-                description: Contains the user ID
-                type: object
-                properties:
-                  identifier:
-                    description: user ID
-                    type: string
-                    example: abcdef012345_
+                $ref: '#/components/schemas/UserID'
+                    
         
         '400':
           $ref: '#/components/responses/InvalidSyntax'
   
-  /users/{userID}/username:
+  /users/{userID}:
+    parameters:
+      - name: userID
+        in: path
+        required: true
+        description: ID of the user
+        schema:
+          $ref: '#/components/schemas/UserID'
+          
     put:
       tags: ["User"]
       summary: Sets the username
@@ -250,13 +243,6 @@ paths:
               properties:
                 name:
                   $ref: '#/components/schemas/Username'
-      parameters:
-        - name: userID
-          in: path
-          required: true
-          description: ID of the user
-          schema:
-            $ref: '#/components/schemas/UserID'
                   
       responses:
         '200':
@@ -278,9 +264,62 @@ paths:
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
+    get:
+      tags: ["User"]
+      summary: View the profile of an user
+      description: |-
+        The user's personal profile page displays their photos and the number of
+        followers, following and uploaded photos. A user can search other user
+        profiles via username.
+      operationId: getUserProfile
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            multipart/form-data:
+              schema:
+                description: returns the array containing all the photos and details
+                type: object
+                properties:
+                  photos:
+                    type: array
+                    description: Contains all the photos and details
+                    minItems: 0
+                    maxItems: 5000
+                    items:
+                      $ref: '#/components/schemas/Photo'
+                      
+                  
+            application/json:
+              schema:
+                description: |-
+                  Contains the number of photos posted, followers and
+                  following
+                type: object
+                properties:
+                  photosCount:
+                    type: integer
+                    description: Number of photos posted by the user
+                  followersCount:
+                    type: integer
+                    description: Number of followers
+                  followingCount:
+                    type: integer
+                    description: Number of users being followed
+          
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
   /users/{userID}/photos:
     post:
-      tags: ["User"]
+      tags: ["User","Photos"]
       summary: Uploads a photo
       description: |- 
         The user can post a new photo on their profile. Photos will be presented in
@@ -420,7 +459,7 @@ paths:
           schema:
             $ref: '#/components/schemas/UserID'
       requestBody:
-        description: ID of the user you want to unban.
+        description: ID of the user you want to ban.
         required: true
         content:
           application/json:
@@ -450,7 +489,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/banned_users/{userBannedID}:
+  /users/{userID}/banned_users/{bannedUserID}:
     delete:
       tags: ["User"]
       summary: Removes a user from the list of users banned by the specified user
@@ -463,7 +502,7 @@ paths:
           description: ID of the user.
           schema:
             $ref: '#/components/schemas/UserID'
-        - name: userBannedID
+        - name: bannedUserID
           in: path
           required: true
           description: ID of the user you want to unban.
@@ -493,70 +532,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/profile:
-    get:
-      tags: ["User"]
-      summary: View the profile of an user
-      description: |-
-        The user's personal profile page displays their photos and the number of
-        followers, following and uploaded photos. A user can search other user
-        profiles via username.
-      operationId: getUserProfile
-      parameters:
-        - name: userID
-          in: path
-          required: true
-          description: ID of the user.
-          schema:
-            $ref: '#/components/schemas/UserID'
-      
 
-      
-      responses:
-        '200':
-          description: OK
-          content:
-            multipart/form-data:
-              schema:
-                description: returns the array containing all the photos and details
-                type: object
-                properties:
-                  photos:
-                    type: array
-                    description: Contains all the photos and details
-                    minItems: 0
-                    maxItems: 5000
-                    items:
-                      $ref: '#/components/schemas/Photo'
-                      
-                  
-            application/json:
-              schema:
-                description: |-
-                  Contains the number of photos posted, followers and
-                  following
-                type: object
-                properties:
-                  photosCount:
-                    type: integer
-                    description: Number of photos posted by the user
-                  followersCount:
-                    type: integer
-                    description: Number of followers
-                  followingCount:
-                    type: integer
-                    description: Number of users being followed
-          
-        '400':
-          $ref: '#/components/responses/InvalidRequest'
-          
-        '401': 
-          $ref: '#/components/responses/UnauthorizedError'
-          
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /users/stream:
+  /users/{userID}/stream:
     get:
       tags: ["User"]
       summary: View the user's stream
@@ -564,6 +541,13 @@ paths:
         The stream is composed by photos from “following” in reverse chronological
         order.
       operationId: getMyStream
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
         
       responses:
         '200':
@@ -588,13 +572,19 @@ paths:
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
-  /photos/{photoID}/likes:
+  /users/{userID}/photos/{photoID}/likes:
     put:
       tags: ["Photos"]
       summary: Adds a like to the specified photo
       description: Users can put likes to all the photos they want
       operationId: likePhoto
       parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
         - name: photoID
           in: path
           required: true
@@ -625,13 +615,19 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
           
-  /photos/{photoID}/likes/{likeID}:
+  /users/{userID}/photos/{photoID}/likes/{likeID}:
     delete:
       tags: ["Photos"]
       summary: Removes a specific like from the specified photo
       description: Users can remove likes to photos
       operationId: unlikePhoto
       parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
         - name: photoID
           in: path
           required: true
@@ -668,13 +664,19 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /photos/{photoID}/comments:
+  /users/{userID}/photos/{photoID}/comments:
     post:
       tags: ["Photos"]
       summary: Adds a comment to the specified photo
       description: Users can comment photos published by them and by others
       operationId: commentPhoto
       parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
         - name: photoID
           in: path
           required: true
@@ -728,7 +730,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /photos/{photoID}/comments/{commentID}:
+  /users/{userID}/photos/{photoID}/comments/{commentID}:
     delete:
       tags: ["Photos"]
       summary: Removes a specific comment from the specified photo
@@ -736,6 +738,12 @@ paths:
         Removes the comment with the specified ID under the specified photo. Only authors can remove their comment.
       operationId: uncommentPhoto
       parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
         - name: photoID
           in: path
           required: true
@@ -772,7 +780,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
           
-  /photos/{photoID}:
+  /users/{userID}/photos/{photoID}:
     delete:
       tags: ["Photos"]
       summary: Deletes a photo
@@ -781,6 +789,12 @@ paths:
         likes and comments.
       operationId: deletePhoto
       parameters:
+        - name: userID
+          in: path
+          required: true
+          description: ID of the user.
+          schema:
+            $ref: '#/components/schemas/UserID'
         - name: photoID
           in: path
           required: true
@@ -812,7 +826,6 @@ paths:
           $ref: '#/components/responses/NotFoundError'
       
       
-
 
 
 
