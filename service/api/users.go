@@ -1,7 +1,6 @@
 package api
 
 import (
-	//"encoding/base64"
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -15,28 +14,6 @@ import (
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
 )
-
-/*
-// TEST
---- SET USERNAME(1)/UPLOADPHOTO(2) ---
-(1): http://localhost:3000/users/1/
-	{"username":"alessia"}
-(2): http://localhost:3000/users/1/photos
- 	{"imageData":"iVBORw0KGgoAAAANSUhEUgAAA8AAAAPAAQAAAADSrS02AAAAh0lEQVR4nO3BMQEAAADCoPVPbQdvoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgN8XPAAHw5H5aAAAAAElFTkSuQmCC"}
-
-
---- FOLLOW/UNFOLLOW ---
-(1): http://localhost:3000/users/1/following
-	{"userid":2}
-(2): http://localhost:3000/users/1/following/2
-	no body
-
---- BAN/UNBAN ---
-(1): http://localhost:3000/users/1/banned_users
-	{"userid":2}
-(2): http://localhost:3000/users/1/banned_users/2
-	no body
-*/
 
 // setMyUserName aggiorna il nome utente dell'utente specificato.
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -119,7 +96,6 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Aggiorna i dati della foto
 	photo.UserID = userID
-	//photo.ImageData = imageData
 	photo.UploadDate = time.Now()
 	photo.LikesCount = 0
 	photo.CommentsCount = 0

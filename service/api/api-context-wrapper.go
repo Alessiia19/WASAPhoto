@@ -1,11 +1,12 @@
 package api
 
 import (
+	"net/http"
+
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"github.com/gofrs/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 // httpRouterHandler is the signature for functions that accepts a reqcontext.RequestContext in addition to those
@@ -25,13 +26,13 @@ func (rt *_router) wrap(fn httpRouterHandler) func(http.ResponseWriter, *http.Re
 			ReqUUID: reqUUID,
 		}
 
-		// Create a request-specific logger
+		//          Create a request-specific logger
 		ctx.Logger = rt.baseLogger.WithFields(logrus.Fields{
 			"reqid":     ctx.ReqUUID.String(),
 			"remote-ip": r.RemoteAddr,
 		})
 
-		// Call the next handler in chain (usually, the handler function for the path)
+		//          Call the next handler in chain (usually, the handler function for the path)
 		fn(w, r, ps, ctx)
 	}
 }

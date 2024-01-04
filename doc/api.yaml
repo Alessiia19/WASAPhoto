@@ -1,6 +1,5 @@
 openapi: 3.0.3
-servers:
-  - url: "http://localhost:3000"
+
 info:
   title: WASAPhoto API
   description: |-
@@ -57,8 +56,8 @@ components:
     
     ImageData:
       type: string
-      description: Binary data representing the image.
-      format: binary
+      format: byte
+      description: represents the image.
       minLength: 1
       maxLength: 5000
       
@@ -91,14 +90,6 @@ components:
           type: integer
           description: number of likes
           example: 12
-          
-        whoLiked:
-          type: array
-          minItems: 0
-          maxItems: 5000
-          description: Contains the user IDs of all users who have liked.
-          items:
-            $ref: '#/components/schemas/UserID'
             
         commentsCount:
           type: integer
@@ -352,7 +343,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
 
   /users/{userID}/following:
-    put:
+    post:
       tags: ["User"]
       summary: Adds a user to the following list of the specified user
       description: Users can follow others to view and interact with their photos.
@@ -444,7 +435,7 @@ paths:
           $ref: '#/components/responses/NotFoundError'
 
   /users/{userID}/banned_users:
-    put:
+    post:
       tags: ["User"]
       summary: Adds a user to the list of users banned by the specified user
       description: |-
@@ -573,7 +564,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
 
   /users/{userID}/photos/{photoID}/likes:
-    put:
+    post:
       tags: ["Photos"]
       summary: Adds a like to the specified photo
       description: Users can put likes to all the photos they want
@@ -825,12 +816,3 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
       
-      
-
-
-
-
-
-
-
-

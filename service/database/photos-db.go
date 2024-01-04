@@ -6,12 +6,6 @@ import (
 	"fmt"
 )
 
-// TEST
-/*
-http://localhost:3000/users/1/photos
-{"imageData":"iVBORw0KGgoAAAANSUhEUgAAA8AAAAPAAQAAAADSrS02AAAAh0lEQVR4nO3BMQEAAADCoPVPbQdvoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgN8XPAAHw5H5aAAAAAElFTkSuQmCC"}
-iVBORw0KGgoAAAANSUhEUgAAA8AAAAPAAQAAAADSrS02AAAAh0lEQVR4nO3BMQEAAADCoPVPbQdvoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgN8XPAAHw5H5aAAAAAElFTkSuQmCC
-*/
 // CreatePhoto carica una nuova foto nel database.
 func (db *appdbimpl) CreatePhoto(p Photo) (Photo, error) {
 
@@ -36,7 +30,7 @@ func (db *appdbimpl) LikePhoto(userID int, photoID int, l Like) error {
 	// Verifica se la foto esiste.
 	var existingPhoto int
 	err := db.c.QueryRow("SELECT 1 FROM photos WHERE photoID = ?", photoID).Scan(&existingPhoto)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return sql.ErrNoRows // Foto non trovata
 	} else if err != nil {
 		return fmt.Errorf("error checking existing photo: %w", err)
@@ -48,9 +42,6 @@ func (db *appdbimpl) LikePhoto(userID int, photoID int, l Like) error {
 	if err == nil {
 		// L'utente ha già messo mi piace
 		return errors.New("already liked")
-	} else if err != sql.ErrNoRows {
-		// Altri errori diversi da ErrNoRows
-		return fmt.Errorf("error checking existing like: %w", err)
 	}
 
 	// Ottenere l'ID dell'utente che ha pubblicato la foto
@@ -67,7 +58,7 @@ func (db *appdbimpl) LikePhoto(userID int, photoID int, l Like) error {
 	// Verifica se l'utente che ha pubblicato la foto ha bannato l'utente corrente.
 	var isBanned int
 	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", userID, photoAuthorID).Scan(&isBanned)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return fmt.Errorf("error checking if user is banned: %w", err)
 	}
 
@@ -104,7 +95,7 @@ func (db *appdbimpl) UnlikePhoto(userID, photoID, likeID int) error {
 	// Check if the photo exists
 	var existingPhoto int
 	err := db.c.QueryRow("SELECT 1 FROM photos WHERE photoID = ?", photoID).Scan(&existingPhoto)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return sql.ErrNoRows // Photo not found
 	} else if err != nil {
 		return fmt.Errorf("error checking existing photo: %w", err)
@@ -113,7 +104,7 @@ func (db *appdbimpl) UnlikePhoto(userID, photoID, likeID int) error {
 	// Check if the like exists
 	var existingLike int
 	err = db.c.QueryRow("SELECT 1 FROM likes WHERE likeID = ?", likeID).Scan(&existingLike)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return sql.ErrNoRows // Like not found
 	} else if err != nil {
 		return fmt.Errorf("error checking existing like: %w", err)
@@ -139,7 +130,7 @@ func (db *appdbimpl) CommentPhoto(userID, photoID int, c Comment) (Comment, erro
 	// Verifica se la foto esiste.
 	var existingPhoto int
 	err := db.c.QueryRow("SELECT 1 FROM photos WHERE photoID = ?", photoID).Scan(&existingPhoto)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return c, sql.ErrNoRows // Foto non trovata
 	} else if err != nil {
 		return c, fmt.Errorf("error checking existing photo: %w", err)
@@ -154,7 +145,7 @@ func (db *appdbimpl) CommentPhoto(userID, photoID int, c Comment) (Comment, erro
 	// Verifica se l'utente che ha pubblicato la foto ha bannato l'utente corrente.
 	var isBanned int
 	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", userID, photoAuthorID).Scan(&isBanned)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return c, fmt.Errorf("error checking if user is banned: %w", err)
 	}
 
@@ -191,7 +182,7 @@ func (db *appdbimpl) UncommentPhoto(userID, photoID, commentID int) error {
 	// Check if the photo exists
 	var existingPhoto int
 	err := db.c.QueryRow("SELECT 1 FROM photos WHERE photoID = ?", photoID).Scan(&existingPhoto)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return sql.ErrNoRows // Photo not found
 	} else if err != nil {
 		return fmt.Errorf("error checking existing photo: %w", err)
@@ -200,7 +191,7 @@ func (db *appdbimpl) UncommentPhoto(userID, photoID, commentID int) error {
 	// Check if the comment exists and if the user who is trying to delete it is the author
 	var commentAuthorID int
 	err = db.c.QueryRow("SELECT userID FROM comments WHERE commentID = ? AND photoID = ?", commentID, photoID).Scan(&commentAuthorID)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return sql.ErrNoRows // Comment not found
 	} else if err != nil {
 		return fmt.Errorf("error checking existing comment: %w", err)
@@ -230,7 +221,7 @@ func (db *appdbimpl) DeletePhoto(userID, photoID int) error {
 	// Verifica se la foto esiste e appartiene all'utente
 	var existingPhotoUserID int
 	err := db.c.QueryRow("SELECT userID FROM photos WHERE photoID = ?", photoID).Scan(&existingPhotoUserID)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return sql.ErrNoRows // Foto non trovata
 	} else if err != nil {
 		return fmt.Errorf("errore durante il controllo dell'esistenza della foto: %w", err)
