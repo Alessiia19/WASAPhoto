@@ -18,8 +18,6 @@ type Photo struct {
 	UploadDate    time.Time `json:"uploadDate"`
 	LikesCount    int       `json:"likesCount"`
 	CommentsCount int       `json:"commentsCount"`
-	//WhoLiked      []int     `json:"whoLiked"`
-	//Comments    []Comment `json:"comments"`
 }
 
 type Like struct {

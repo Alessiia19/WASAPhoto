@@ -34,8 +34,6 @@ type Photo struct {
 	UploadDate    time.Time `json:"uploadDate"`
 	LikesCount    int       `json:"likesCount"`
 	CommentsCount int       `json:"commentsCount"`
-	//WhoLiked      []int     `json:"whoLiked"`
-	//Comments    []Comment 	`json:"comments"`
 }
 
 func (p *Photo) PhotoFromDatabase(photo database.Photo) {
@@ -45,8 +43,6 @@ func (p *Photo) PhotoFromDatabase(photo database.Photo) {
 	p.UploadDate = photo.UploadDate
 	p.LikesCount = photo.LikesCount
 	p.CommentsCount = photo.CommentsCount
-	//p.WhoLiked = photo.WhoLiked
-	//p.Comments = photo.Comments
 }
 
 func (p *Photo) PhotoToDatabase() database.Photo {

@@ -2,10 +2,11 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
-// --- GET DATA FROM DATABASE FUNCTIONS ---
+//          --- GET DATA FROM DATABASE FUNCTIONS ---
 
 // GetPhotoUserID restituisce l'ID dell'utente che ha pubblicato la foto specificata.
 func (db *appdbimpl) GetPhotoUserID(photoID int) (int, error) {
@@ -23,7 +24,7 @@ func (db *appdbimpl) getUserDetails(userID int) (User, error) {
 	err := db.c.QueryRow("SELECT userID, username FROM users WHERE userID = ?", userID).
 		Scan(&user.UserID, &user.Username)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return user, fmt.Errorf("user not found")
 	} else if err != nil {
 		return user, fmt.Errorf("error fetching user details: %w", err)

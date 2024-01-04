@@ -11,25 +11,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TEST
-/*
---- LIKE/UNLIKE ---
-(1): http://localhost:3000/users/1/photos/1/likes
-	no body
-(2): http://localhost:3000/users/1/photos/1/likes/1
-	no body
-
---- COMMENT/UNCOMMENT ---
-(1): http://localhost:3000/users/1/photos/1/comments
-	{"commentText":"Bella foto!"}
-(2): http://localhost:3000/users/1/photos/1/comments/1
-	no body
-
---- DELETE PHOTO ---
-http://localhost:3000/users/1/photos/1
-
-*/
-
 // likePhoto aggiunge un like alla foto specificata.
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")

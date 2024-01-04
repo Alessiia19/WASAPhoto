@@ -1,6 +1,5 @@
 package database
 
-// CAPIRE SE VA RESTITUITO SOLO L'ID O LA STRUCT USER{} VISTO CHE A QUANTO PARE È "PRATICA COMUNE DI GO"
 func (db *appdbimpl) CreateUser(u User) (User, error) {
 
 	var user User
@@ -27,7 +26,3 @@ func (db *appdbimpl) CreateUser(u User) (User, error) {
 	u.UserID = int(id)
 	return u, nil
 }
-
-// TEST
-// http://localhost:3000/session
-// {"username":"alessia"}

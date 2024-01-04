@@ -83,14 +83,19 @@ func New(db *sql.DB) (AppDatabase, error) {
 }
 
 func createTables(db *sql.DB) error {
-	db.Exec("PRAGMA foreign_key=ON;")
+	_, err := db.Exec("PRAGMA foreign_key=ON;")
+	if err != nil {
+		return fmt.Errorf("error setting PRAGMA: %w", err)
+
+	}
+
 	userQuery := `CREATE TABLE IF NOT EXISTS users (
 				userID INTEGER PRIMARY KEY AUTOINCREMENT,
 				username TEXT,
 				UNIQUE (userID, username)
 				);`
 
-	_, err := db.Exec(userQuery)
+	_, err = db.Exec(userQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating users structure: %w", err)
@@ -170,29 +175,6 @@ func createTables(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("error creating comments structure: %w", err)
 	}
-
-	/*
-		commentQuery := `CREATE TABLE comment (commentId INTEGER PRIMARY KEY AUTOINCREMENT,
-						commentText TEXT,
-						upload_date DATETIME,
-						userID INTEGER,
-						photoId INTEGER,
-						FOREIGN KEY(userID) REFERENCES user(userID) ON DELETE CASCADE,
-						FOREIGN KEY(photoId) REFERENCES photo(photoId) ON DELETE CASCADE);`
-		_, err = db.Exec(commentQuery)
-		if err != nil {
-			return fmt.Errorf("error creating comment structure: %w", err)
-		}
-		likeQuery := `CREATE TABLE like (userID INTEGER,
-						likedPhotoId INTEGER,
-						PRIMARY KEY (userID, likedPhotoId),
-						FOREIGN KEY (userID) REFERENCES user(userID),
-						FOREIGN KEY (likedPhotoId) REFERENCES photo(photoId));`
-		_, err = db.Exec(likeQuery)
-		if err != nil {
-			return fmt.Errorf("error creating like structure: %w", err)
-		}
-	*/
 
 	return nil
 }
