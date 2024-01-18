@@ -16,7 +16,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole mettere mi piace a una foto
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -33,7 +33,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	photoID, err := strconv.Atoi(ps.ByName("photoID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("likePhoto: Invalid photo ID format.")
@@ -65,7 +65,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole rimuovere il mi piace da una foto
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -82,14 +82,14 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	photoID, err := strconv.Atoi(ps.ByName("photoID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unlikePhoto: Invalid photo ID format.")
 		return
 	}
 
-	likeID, err := strconv.Atoi(ps.ByName("likeid"))
+	likeID, err := strconv.Atoi(ps.ByName("likeID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unlikePhoto: Invalid like ID format.")
@@ -120,7 +120,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole commentare una foto
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -137,7 +137,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	photoID, err := strconv.Atoi(ps.ByName("photoID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("commentPhoto: Invalid photo ID format.")
@@ -173,7 +173,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole rimuovere il commento da una foto
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -190,14 +190,14 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	photoID, err := strconv.Atoi(ps.ByName("photoID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uncommentPhoto: Invalid photo ID format.")
 		return
 	}
 
-	commentID, err := strconv.Atoi(ps.ByName("commentid"))
+	commentID, err := strconv.Atoi(ps.ByName("commentID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uncommentPhoto: Invalid like ID format.")
@@ -228,7 +228,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole rimuovere la foto
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -245,7 +245,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoid"))
+	photoID, err := strconv.Atoi(ps.ByName("photoID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("deletePhoto: Invalid photo ID format.")
