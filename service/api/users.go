@@ -19,7 +19,7 @@ import (
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -60,7 +60,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -118,7 +118,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che compie l'azione (follower) dal path.
-	followerID, err := strconv.Atoi(ps.ByName("userid"))
+	followerID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("followUser: Invalid user ID format.")
@@ -157,7 +157,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ottieni gli ID dal path
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unfollowUser: Invalid user ID format.")
@@ -172,7 +172,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	followingID, err := strconv.Atoi(ps.ByName("followingid"))
+	followingID, err := strconv.Atoi(ps.ByName("followingID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unfollowUser: Invalid following ID format.")
@@ -210,7 +210,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che compie l'azione dal path.
-	UserID, err := strconv.Atoi(ps.ByName("userid"))
+	UserID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("banUser: Invalid user ID format.")
@@ -249,7 +249,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ottieni gli ID dal path
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unbanUser: Invalid user ID format.")
@@ -264,7 +264,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	bannedUserID, err := strconv.Atoi(ps.ByName("banneduserid"))
+	bannedUserID, err := strconv.Atoi(ps.ByName("bannedUserID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unbanUser: Invalid banned user ID format.")
@@ -302,7 +302,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ottieni l'ID dell'user di cui si vuole visualizzare il profilo dal path
-	requestedUserID, err := strconv.Atoi(ps.ByName("userid"))
+	requestedUserID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("getUserProfile: Invalid user ID format.")
@@ -339,7 +339,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 
 	// Ottieni l'ID dell'user dal path
-	userID, err := strconv.Atoi(ps.ByName("userid"))
+	userID, err := strconv.Atoi(ps.ByName("userID"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("getMyStream: Invalid user ID format.")
