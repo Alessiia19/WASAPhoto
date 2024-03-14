@@ -9,14 +9,17 @@ info:
   version: 1.0.0
 
 tags:
-  - name: Login
+  - name: "Login"
     description: User authentication for accessing the platform.
-  - name: User
+  - name: "User"
     description: Everything about users.
-  - name: Photos
+  - name: "Photos"
     description: Everything about photos.
+    
+#-------------------------------------------------------------------------------
   
 components:
+
   securitySchemes:
     # Bearer authentication using the user identifier instead of the token
     bearerAuth:
@@ -26,42 +29,48 @@ components:
     
   schemas:
   
-    UserID:
+    userid:
       description: user ID
       type: integer
       example: 1234
+    #___________________________________________________________________________
     
-    Username:
+    username:
       description: username
       type: string
       example: Maria
       pattern: '^[a-zA-Z0-9]+$'
       minLength: 3
       maxLength: 16
-                  
-    PhotoID:
+    #___________________________________________________________________________
+    
+    photoid:
       type: integer
       description: ID of the photo.
       example: 1234
+    #___________________________________________________________________________
     
-    LikeID:
+    likeid:
       description: like ID
       type: integer
       example: 1234
+    #___________________________________________________________________________
     
-    CommentID:
+    commentid:
       description: comment ID
       type: integer
       example: 1234
+    #___________________________________________________________________________
     
-    ImageData:
+    imagedata:
       type: string
       format: byte
       description: represents the image.
       minLength: 1
       maxLength: 5000
-      
-    Photo:
+    #___________________________________________________________________________
+    
+    photo:
       description: |- 
         Photo object that includes the author's name, the image URL, the number of
         likes and comments, and details about users who liked or commented, including
@@ -70,13 +79,13 @@ components:
       properties:
       
         author:
-          $ref: '#/components/schemas/Username'
+          $ref: '#/components/schemas/username'
         
-        photoID:
-          $ref: '#/components/schemas/PhotoID'
+        photoid:
+          $ref: '#/components/schemas/photoid'
           
-        imageData:
-          $ref: '#/components/schemas/ImageData'
+        imagedata:
+          $ref: '#/components/schemas/imagedata'
       
         uploadDate:
           type: string
@@ -106,10 +115,10 @@ components:
           items:
             type: object
             properties:
-              userID:
-                $ref: '#/components/schemas/UserID'
-              commentID:
-                $ref: '#/components/schemas/CommentID'
+              userid:
+                $ref: '#/components/schemas/userid'
+              commentid:
+                $ref: '#/components/schemas/commentid'
               comment:
                 type: string
                 description: Comment on a photo
@@ -117,7 +126,8 @@ components:
                 minLength: 1
                 maxLength: 5000
                 example: Beautiful photo!
-                
+    #___________________________________________________________________________
+      
   responses:
   
     UnauthorizedError:
@@ -132,20 +142,10 @@ components:
                 description: error message
                 type: string
                 example: Invalid user ID supplied
-                    
-    InvalidSyntax:
-      description: Invalid syntax
-      content:
-        application/json:
-          schema:
-            description: Contains an error message
-            type: object
-            properties:
-              message:
-                description: error message
-                type: string
-                example: Invalid username format. Please follow the specified requirements.
-    InvalidRequest: 
+
+    #___________________________________________________________________________
+    
+    BadRequest: 
       description: Invalid request
       content:
         application/json:
@@ -157,6 +157,7 @@ components:
                 description: error message
                 type: string
                 example: Invalid request
+    #___________________________________________________________________________
     
     NotFoundError:
       description: Element not found
@@ -171,10 +172,11 @@ components:
                 type: string
                 example: Element not found
           
+#-------------------------------------------------------------------------------
     
 security:
   - bearerAuth: []
-  
+
 paths:
   /session:
     post:
@@ -194,7 +196,7 @@ paths:
             type: object
             properties:
               name:
-                $ref: '#/components/schemas/Username'
+                $ref: '#/components/schemas/username'
         required: true
         
       responses:
@@ -203,20 +205,20 @@ paths:
           content:
            application/json:
              schema:
-                $ref: '#/components/schemas/UserID'
+                $ref: '#/components/schemas/userid'
                     
         
         '400':
-          $ref: '#/components/responses/InvalidSyntax'
+          $ref: '#/components/responses/BadRequest'
   
-  /users/{userID}:
+  /users/{userid}:
     parameters:
-      - name: userID
+      - name: userid
         in: path
         required: true
         description: ID of the user
         schema:
-          $ref: '#/components/schemas/UserID'
+          $ref: '#/components/schemas/userid'
           
     put:
       tags: ["User"]
@@ -233,7 +235,7 @@ paths:
               type: object
               properties:
                 name:
-                  $ref: '#/components/schemas/Username'
+                  $ref: '#/components/schemas/username'
                   
       responses:
         '200':
@@ -250,7 +252,7 @@ paths:
                     example: OK
         
         '400':
-          $ref: '#/components/responses/InvalidSyntax'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -279,7 +281,7 @@ paths:
                     minItems: 0
                     maxItems: 5000
                     items:
-                      $ref: '#/components/schemas/Photo'
+                      $ref: '#/components/schemas/photo'
                       
                   
             application/json:
@@ -300,7 +302,7 @@ paths:
                     description: Number of users being followed
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -308,9 +310,9 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/photos:
+  /users/{userid}/photos:
     post:
-      tags: ["User","Photos"]
+      tags: ["Photos"]
       summary: Uploads a photo
       description: |- 
         The user can post a new photo on their profile. Photos will be presented in
@@ -322,14 +324,14 @@ paths:
         content: 
           application/json:
             schema:
-              $ref: '#/components/schemas/ImageData'
+              $ref: '#/components/schemas/imagedata'
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: '#/components/schemas/userid'
       
       responses:
         '201':
@@ -337,31 +339,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Photo'
+                $ref: '#/components/schemas/photo'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
-  /users/{userID}/following:
+  /users/{userid}/following:
     post:
       tags: ["User"]
       summary: Adds a user to the following list of the specified user
       description: Users can follow others to view and interact with their photos.
       operationId: followUser
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: '#/components/schemas/userid'
       requestBody:
         description: ID of the user you want to follow.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserID'
+              $ref: '#/components/schemas/userid'
             
                     
       responses:
@@ -379,7 +381,7 @@ paths:
                   
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -387,7 +389,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/following/{followingID}:
+  /users/{userid}/following/{followingid}:
     delete:
       tags: ["User"]
       summary: Removes a user from the following list of the specified user
@@ -396,18 +398,18 @@ paths:
         their photos.
       operationId: unfollowUser
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: followingID
+            $ref: '#/components/schemas/userid'
+        - name: followingid
           in: path
           required: true
           description: ID of the user you want to unfollow.
           schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: '#/components/schemas/userid'
         
         
                     
@@ -426,7 +428,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -434,7 +436,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/banned_users:
+  /users/{userid}/banned_users:
     post:
       tags: ["User"]
       summary: Adds a user to the list of users banned by the specified user
@@ -443,19 +445,19 @@ paths:
         about them.
       operationId: banUser
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: '#/components/schemas/userid'
       requestBody:
         description: ID of the user you want to ban.
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserID'
+              $ref: '#/components/schemas/userid'
                     
       responses:
         '201':
@@ -472,7 +474,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -480,25 +482,25 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/banned_users/{bannedUserID}:
+  /users/{userid}/banned_users/{banneduserid}:
     delete:
       tags: ["User"]
       summary: Removes a user from the list of users banned by the specified user
       description: Unblocking a user allows them to view your profile information.
       operationId: unbanUser
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: bannedUserID
+            $ref: '#/components/schemas/userid'
+        - name: banneduserid
           in: path
           required: true
           description: ID of the user you want to unban.
           schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: '#/components/schemas/userid'
                     
       responses:
         '201':
@@ -515,7 +517,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -523,8 +525,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-
-  /users/{userID}/stream:
+  /users/{userid}/stream:
     get:
       tags: ["User"]
       summary: View the user's stream
@@ -533,12 +534,12 @@ paths:
         order.
       operationId: getMyStream
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
+            $ref: '#/components/schemas/userid'
         
       responses:
         '200':
@@ -555,33 +556,33 @@ paths:
                     minItems: 0
                     maxItems: 5000
                     items:
-                      $ref: '#/components/schemas/Photo'
+                      $ref: '#/components/schemas/photo'
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
 
-  /users/{userID}/photos/{photoID}/likes:
+  /users/{userid}/photos/{photoid}/likes:
     post:
       tags: ["Photos"]
       summary: Adds a like to the specified photo
       description: Users can put likes to all the photos they want
       operationId: likePhoto
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: photoID
+            $ref: '#/components/schemas/userid'
+        - name: photoid
           in: path
           required: true
           description: ID of the photo you want to like.
           schema:
-            $ref: '#/components/schemas/PhotoID'
+            $ref: '#/components/schemas/photoid'
                     
       responses:
         '201':
@@ -598,7 +599,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -606,31 +607,31 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
           
-  /users/{userID}/photos/{photoID}/likes/{likeID}:
+  /users/{userid}/photos/{photoid}/likes/{likeid}:
     delete:
       tags: ["Photos"]
       summary: Removes a specific like from the specified photo
       description: Users can remove likes to photos
       operationId: unlikePhoto
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: photoID
+            $ref: '#/components/schemas/userid'
+        - name: photoid
           in: path
           required: true
           description: ID of the photo you want to unlike.
           schema:
-            $ref: '#/components/schemas/PhotoID'
-        - name: likeID
+            $ref: '#/components/schemas/photoid'
+        - name: likeid
           in: path
           required: true
           description: ID of the like you want to remove.
           schema:
-            $ref: '#/components/schemas/LikeID'
+            $ref: '#/components/schemas/likeid'
                     
       responses:
         '201':
@@ -647,7 +648,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -655,25 +656,25 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/photos/{photoID}/comments:
+  /users/{userid}/photos/{photoid}/comments:
     post:
       tags: ["Photos"]
       summary: Adds a comment to the specified photo
       description: Users can comment photos published by them and by others
       operationId: commentPhoto
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: photoID
+            $ref: '#/components/schemas/userid'
+        - name: photoid
           in: path
           required: true
           description: ID of the photo you want to comment.
           schema:
-            $ref: '#/components/schemas/PhotoID'
+            $ref: '#/components/schemas/photoid'
       requestBody:
         description: Your comment.
         required: true
@@ -700,10 +701,10 @@ paths:
                 description: Contains the user and their comment with its ID
                 type: object
                 properties:
-                  authorID: 
-                    $ref: '#/components/schemas/UserID'
-                  commentID:
-                    $ref: '#/components/schemas/CommentID'
+                  authorid: 
+                    $ref: '#/components/schemas/userid'
+                  commentid:
+                    $ref: '#/components/schemas/commentid'
                   comment:
                     description: comment string
                     type: string
@@ -713,7 +714,7 @@ paths:
                     example: Beautiful Photo!
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -721,7 +722,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userID}/photos/{photoID}/comments/{commentID}:
+  /users/{userid}/photos/{photoid}/comments/{commentid}:
     delete:
       tags: ["Photos"]
       summary: Removes a specific comment from the specified photo
@@ -729,24 +730,24 @@ paths:
         Removes the comment with the specified ID under the specified photo. Only authors can remove their comment.
       operationId: uncommentPhoto
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: photoID
+            $ref: '#/components/schemas/userid'
+        - name: photoid
           in: path
           required: true
           description: ID of the photo where the comment to be removed is located.
           schema:
-            $ref: '#/components/schemas/PhotoID'
-        - name: commentID
+            $ref: '#/components/schemas/photoid'
+        - name: commentid
           in: path
           required: true
           description: ID of the comment you want to remove
           schema:
-            $ref: '#/components/schemas/CommentID'
+            $ref: '#/components/schemas/commentid'
             
       responses:
         '200':
@@ -763,7 +764,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'
@@ -771,7 +772,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
           
-  /users/{userID}/photos/{photoID}:
+  /users/{userid}/photos/{photoid}:
     delete:
       tags: ["Photos"]
       summary: Deletes a photo
@@ -780,18 +781,18 @@ paths:
         likes and comments.
       operationId: deletePhoto
       parameters:
-        - name: userID
+        - name: userid
           in: path
           required: true
           description: ID of the user.
           schema:
-            $ref: '#/components/schemas/UserID'
-        - name: photoID
+            $ref: '#/components/schemas/userid'
+        - name: photoid
           in: path
           required: true
           description: ID of the photo you want to remove.
           schema:
-            $ref: '#/components/schemas/PhotoID'
+            $ref: '#/components/schemas/photoid'
       
       responses:
         '200':
@@ -808,7 +809,7 @@ paths:
                     example: OK
           
         '400':
-          $ref: '#/components/responses/InvalidRequest'
+          $ref: '#/components/responses/BadRequest'
           
         '401': 
           $ref: '#/components/responses/UnauthorizedError'

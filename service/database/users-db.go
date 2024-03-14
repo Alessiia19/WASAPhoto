@@ -13,7 +13,7 @@ func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 	// (Aggiungi qui i controlli necessari, se vuoi farli)
 
 	// Esegui l'aggiornamento dell'username nel database.
-	result, err := db.c.Exec("UPDATE users SET username = ? WHERE userID = ?", newUsername, userID)
+	result, err := db.c.Exec("UPDATE users SET username = ? WHERE userid = ?", newUsername, userID)
 	if err != nil {
 		// In caso di errore durante l'aggiornamento dell'username, restituisci l'errore.
 		return fmt.Errorf("error updating username in database: %w", err)
@@ -38,16 +38,16 @@ func (db *appdbimpl) FollowUser(userID, userIDToFollow int) error {
 
 	// Controllo se l'utente sta cercando di eseguire l'operazione di follow su un utente che non esiste
 	var existingUser int
-	err := db.c.QueryRow("SELECT 1 FROM users WHERE userID = ?", userIDToFollow).Scan(&existingUser)
+	err := db.c.QueryRow("SELECT 1 FROM users WHERE userid = ?", userIDToFollow).Scan(&existingUser)
 	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("The user you want to follow doesn't exists.")
+		return fmt.Errorf("the user you want to follow doesn't exists")
 	} else if err != nil {
 		return fmt.Errorf("error checking existing user: %w", err)
 	}
 
 	// Controllo se l'utente è bloccato dall'utente che si sta cercando di seguire
 	var isBanned int
-	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", userIDToFollow, userID).Scan(&isBanned)
+	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userIDToFollow, userID).Scan(&isBanned)
 	if err == nil {
 		// L'utente è bloccato dall'altro utente
 		return errors.New("you are banned by this user")
@@ -55,7 +55,7 @@ func (db *appdbimpl) FollowUser(userID, userIDToFollow int) error {
 
 	// Controllo se l'utente ha bloccato l'altro utente
 	var hasBanned int
-	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", userID, userIDToFollow).Scan(&hasBanned)
+	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, userIDToFollow).Scan(&hasBanned)
 	if err == nil {
 		// L'utente ha bloccato l'altro utente
 		return errors.New("you have banned this user")
@@ -63,7 +63,7 @@ func (db *appdbimpl) FollowUser(userID, userIDToFollow int) error {
 
 	// Controllo se l'utente segue già l'altro utente
 	var existingFollower int
-	err = db.c.QueryRow("SELECT 1 FROM followers WHERE userID = ? AND followerID = ?", userIDToFollow, userID).Scan(&existingFollower)
+	err = db.c.QueryRow("SELECT 1 FROM followers WHERE userid = ? AND followerid = ?", userIDToFollow, userID).Scan(&existingFollower)
 	if err == nil {
 		// L'utente segue già l'altro utente
 		return errors.New("already followed")
@@ -94,21 +94,21 @@ func (db *appdbimpl) UnfollowUser(userID, followingID int) error {
 	// Controllo se l'utente sta cercando di eseguire l'operazione di unfollow su un utente che non sta seguendo
 
 	var existingFollower int
-	err := db.c.QueryRow("SELECT 1 FROM followers WHERE userID = ? AND followerID = ?", followingID, userID).Scan(&existingFollower)
+	err := db.c.QueryRow("SELECT 1 FROM followers WHERE userid = ? AND followerid = ?", followingID, userID).Scan(&existingFollower)
 	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("You are trying to unfollow someone you don't follow.")
+		return fmt.Errorf("you are trying to unfollow someone you don't follow")
 	} else if err != nil {
 		return fmt.Errorf("error checking existing follower: %w", err)
 	}
 
 	// Rimuovi l'utente dai followers.
-	_, err = db.c.Exec("DELETE FROM followers WHERE userID = ? AND followerID = ?", followingID, userID)
+	_, err = db.c.Exec("DELETE FROM followers WHERE userid = ? AND followerid = ?", followingID, userID)
 	if err != nil {
 		return fmt.Errorf("error removing follower: %w", err)
 	}
 
 	// Rimuovi l'utente dai following.
-	_, err = db.c.Exec("DELETE FROM following WHERE userID = ? AND followingID = ?", userID, followingID)
+	_, err = db.c.Exec("DELETE FROM following WHERE userid = ? AND followingid = ?", userID, followingID)
 	if err != nil {
 		return fmt.Errorf("error removing following: %w", err)
 	}
@@ -117,24 +117,24 @@ func (db *appdbimpl) UnfollowUser(userID, followingID int) error {
 }
 
 // BanUser implementa l'operazione di ban nel database.
-func (db *appdbimpl) BanUser(UserID, bannedUserID int) error {
+func (db *appdbimpl) BanUser(userID, bannedUserID int) error {
 	// Verifica se l'utente da bloccare esiste nella tabella `users`.
 	var existingUser int
-	err := db.c.QueryRow("SELECT 1 FROM users WHERE userID = ?", bannedUserID).Scan(&existingUser)
+	err := db.c.QueryRow("SELECT 1 FROM users WHERE userid = ?", bannedUserID).Scan(&existingUser)
 	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("The user you want to ban doesn't exists.")
+		return fmt.Errorf("the user you want to ban doesn't exists")
 	} else if err != nil {
 		return fmt.Errorf("error checking existing user: %w", err)
 	}
 
 	// Controllo se l'utente sta cercando di bannare se stesso
-	if UserID == bannedUserID {
+	if userID == bannedUserID {
 		return errors.New("cannot ban yourself")
 	}
 
 	// Controllo se l'utente è stato bannato da chi si sta cercando di bannare
 	var isBanned int
-	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", bannedUserID, UserID).Scan(&isBanned)
+	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", bannedUserID, userID).Scan(&isBanned)
 	if err == nil {
 		// L'utente è bloccato dall'altro utente
 		return errors.New("you are banned by this user")
@@ -142,7 +142,7 @@ func (db *appdbimpl) BanUser(UserID, bannedUserID int) error {
 
 	// Controllo se l'utente ha bloccato l'altro utente
 	var hasBanned int
-	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", UserID, bannedUserID).Scan(&hasBanned)
+	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, bannedUserID).Scan(&hasBanned)
 	if err == nil {
 		// L'utente ha bloccato l'altro utente
 		return errors.New("you have banned this user")
@@ -150,15 +150,15 @@ func (db *appdbimpl) BanUser(UserID, bannedUserID int) error {
 
 	// Utilizza la funzione UnfollowUser per gestire la rimozione dai followers e dai following.
 	// L'utente bloccato smette automaticamente di essere sia follower che following dell'utente che lo blocca
-	if err := db.UnfollowUser(UserID, bannedUserID); err != nil {
+	if err := db.UnfollowUser(userID, bannedUserID); err != nil {
 		return fmt.Errorf("error handling unfollow during ban operation: %w", err)
 	}
-	if err := db.UnfollowUser(bannedUserID, UserID); err != nil {
+	if err := db.UnfollowUser(bannedUserID, userID); err != nil {
 		return fmt.Errorf("error handling unfollow during ban operation: %w", err)
 	}
 
 	// Aggiorna la tabella dei bloccati.
-	_, err = db.c.Exec("INSERT INTO banned_users (userID, bannedUserID) VALUES (?, ?)", UserID, bannedUserID)
+	_, err = db.c.Exec("INSERT INTO banned_users (userid, banneduserid) VALUES (?, ?)", userID, bannedUserID)
 	if err != nil {
 		return fmt.Errorf("error updating banned_users table: %w", err)
 	}
@@ -170,15 +170,15 @@ func (db *appdbimpl) BanUser(UserID, bannedUserID int) error {
 func (db *appdbimpl) UnbanUser(userID, bannedUserID int) error {
 	// Controllo se l'utente sta cercando di eseguire l'operazione di unbanning su un utente che non è stato bannato o non esiste
 	var existingUser int
-	err := db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", userID, bannedUserID).Scan(&existingUser)
+	err := db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, bannedUserID).Scan(&existingUser)
 	if errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("You are trying to unban someone who was not banned or doesn't exists.")
+		return fmt.Errorf("you are trying to unban someone who was not banned or doesn't exists")
 	} else if err != nil {
 		return fmt.Errorf("error checking existing ban: %w", err)
 	}
 
 	// Rimuovi l'utente dai banned_users.
-	_, err = db.c.Exec("DELETE FROM banned_users WHERE userID = ? AND bannedUserID = ?", userID, bannedUserID)
+	_, err = db.c.Exec("DELETE FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, bannedUserID)
 	if err != nil {
 		return fmt.Errorf("error removing ban: %w", err)
 	}
@@ -194,41 +194,41 @@ func (db *appdbimpl) GetUserProfile(requestingUserID, requestedUserID int) (Prof
 
 	// Controllo se l'utente che si vuole cercare esiste
 	var existingUser int
-	err := db.c.QueryRow("SELECT 1 FROM users WHERE userID = ?", requestedUserID).Scan(&existingUser)
+	err := db.c.QueryRow("SELECT 1 FROM users WHERE userid = ?", requestedUserID).Scan(&existingUser)
 	if errors.Is(err, sql.ErrNoRows) {
-		return profile, fmt.Errorf("The user you are searching doesn't exist")
+		return profile, fmt.Errorf("the user you are searching doesn't exist")
 	} else if err != nil {
 		return profile, fmt.Errorf("error checking existing user: %w", err)
 	}
 
 	// Controllo se l'utente è bloccato dall'utente che si sta cercando
 	var isBanned int
-	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userID = ? AND bannedUserID = ?", requestedUserID, requestingUserID).Scan(&isBanned)
+	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", requestedUserID, requestingUserID).Scan(&isBanned)
 	if err == nil {
 		// L'utente è bloccato dall'altro utente
 		return profile, errors.New("you are banned by this user")
 	}
 
 	// Ottenere dettagli utente (Username, Followers, Following, UploadedPhotosCount)
-	user, err := db.getUserDetails(requestedUserID)
+	user, err := db.GetUserDetails(requestedUserID)
 	if err != nil {
 		return profile, err
 	}
 
 	// Ottenere la lista di follower
-	followers, err := db.getFollowers(requestedUserID)
+	followers, err := db.GetFollowers(requestedUserID)
 	if err != nil {
 		return profile, err
 	}
 
 	// Ottenere la lista di utenti seguiti
-	following, err := db.getFollowing(requestedUserID)
+	following, err := db.GetFollowing(requestedUserID)
 	if err != nil {
 		return profile, err
 	}
 
 	// Ottenere la lista di foto caricate dall'utente
-	uploadedPhotos, err := db.getUploadedPhotos(requestedUserID)
+	uploadedPhotos, err := db.GetUploadedPhotos(requestedUserID)
 	if err != nil {
 		return profile, err
 	}
@@ -250,7 +250,7 @@ func (db *appdbimpl) GetUserProfile(requestingUserID, requestedUserID int) (Prof
 // comprese di dettagli quali il date-time in cui sono state pubblicate, il numero di like e di commenti.
 func (db *appdbimpl) GetMyStream(userID int) ([]Photo, error) {
 	// Ottieni la lista di utenti seguiti dall'utente specificato
-	following, err := db.getFollowing(userID)
+	following, err := db.GetFollowing(userID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting following users: %w", err)
 	}
@@ -260,7 +260,7 @@ func (db *appdbimpl) GetMyStream(userID int) ([]Photo, error) {
 	// Itera su ogni utente seguito per ottenere le foto dallo stream
 	for _, followedUser := range following {
 		// Ottieni la lista di foto caricate dall'utente seguito
-		uploadedPhotos, err := db.getUploadedPhotos(followedUser.UserID)
+		uploadedPhotos, err := db.GetUploadedPhotos(followedUser.UserID)
 		if err != nil {
 			return nil, fmt.Errorf("error getting uploaded photos for user %d: %w", followedUser.UserID, err)
 		}

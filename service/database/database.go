@@ -52,6 +52,14 @@ type AppDatabase interface {
 	DeletePhoto(int, int) error
 	GetUserProfile(int, int) (Profile, error)
 	GetMyStream(int) ([]Photo, error)
+
+	// utils
+	GetPhotoUserID(int) (int, error)
+	GetUserDetails(int) (User, error)
+	GetFollowers(int) ([]User, error)
+	GetFollowing(int) ([]User, error)
+	GetUploadedPhotos(int) ([]Photo, error)
+
 	Ping() error
 }
 
@@ -89,37 +97,37 @@ func createTables(db *sql.DB) error {
 
 	}
 
-	userQuery := `CREATE TABLE IF NOT EXISTS users (
-				userID INTEGER PRIMARY KEY AUTOINCREMENT,
+	usersQuery := `CREATE TABLE IF NOT EXISTS users (
+				userid INTEGER PRIMARY KEY AUTOINCREMENT,
 				username TEXT,
-				UNIQUE (userID, username)
+				UNIQUE (userid, username)
 				);`
 
-	_, err = db.Exec(userQuery)
+	_, err = db.Exec(usersQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating users structure: %w", err)
 	}
 
 	// VEDI SE TOGLIERE IMAGEDATA
-	photoQuery := `CREATE TABLE photos (photoID INTEGER PRIMARY KEY AUTOINCREMENT,
-					userID INTEGER,
+	photosQuery := `CREATE TABLE IF NOT EXISTS photos (photoid INTEGER PRIMARY KEY AUTOINCREMENT,
+					userid INTEGER,
 					imageData BLOB,
 					uploadDate DATETIME,
 					likesCount INTEGER,
 					commentsCount INTEGER,
-					FOREIGN KEY(userID) REFERENCES user(userID) ON DELETE CASCADE);`
-	_, err = db.Exec(photoQuery)
+					FOREIGN KEY(userid) REFERENCES user(userid) ON DELETE CASCADE);`
+	_, err = db.Exec(photosQuery)
 	if err != nil {
 		return fmt.Errorf("error creating photos structure: %w", err)
 	}
 
 	followersQuery := `CREATE TABLE IF NOT EXISTS followers (
-		userID INTEGER,
-		followerID INTEGER,
-		PRIMARY KEY (userID, followerID),
-		FOREIGN KEY (userID) REFERENCES users(userID),
-		FOREIGN KEY (followerID) REFERENCES users(userID)
+		userid INTEGER,
+		followerid INTEGER,
+		PRIMARY KEY (userid, followerid),
+		FOREIGN KEY (userid) REFERENCES users(userid),
+		FOREIGN KEY (followerid) REFERENCES users(userid)
 		);`
 	_, err = db.Exec(followersQuery)
 	if err != nil {
@@ -127,11 +135,11 @@ func createTables(db *sql.DB) error {
 	}
 
 	followingQuery := `CREATE TABLE IF NOT EXISTS following (
-            userID INTEGER,
-            followingID INTEGER,
-            PRIMARY KEY (userID, followingID),
-            FOREIGN KEY (userID) REFERENCES users(userID),
-            FOREIGN KEY (followingID) REFERENCES users(userID)
+            userid INTEGER,
+            followingid INTEGER,
+            PRIMARY KEY (userid, followingid),
+            FOREIGN KEY (userid) REFERENCES users(userid),
+            FOREIGN KEY (followingid) REFERENCES users(userid)
 			);`
 
 	_, err = db.Exec(followingQuery)
@@ -139,39 +147,39 @@ func createTables(db *sql.DB) error {
 		return fmt.Errorf("error creating following table: %w", err)
 	}
 
-	banQuery := `CREATE TABLE banned_users (
-		userID INTEGER,
-		bannedUserID INTEGER,
-		PRIMARY KEY (userID, bannedUserID),
-		FOREIGN KEY (userID) REFERENCES user(userID),
-		FOREIGN KEY (bannedUserID) REFERENCES user(userID));`
-	_, err = db.Exec((banQuery))
+	bansQuery := `CREATE TABLE banned_users (
+		userid INTEGER,
+		banneduserid INTEGER,
+		PRIMARY KEY (userid, banneduserid),
+		FOREIGN KEY (userid) REFERENCES user(userid),
+		FOREIGN KEY (bannedUserid) REFERENCES user(userid));`
+	_, err = db.Exec((bansQuery))
 	if err != nil {
 		return fmt.Errorf("error creating ban structure: %w", err)
 	}
 
 	likesQuery := `CREATE TABLE likes (
-		likeID INTEGER PRIMARY KEY AUTOINCREMENT,
-		userID INTEGER,
-		photoID INTEGER,
-		FOREIGN KEY(userID) REFERENCES users(userID) ON DELETE CASCADE,
-		FOREIGN KEY(photoID) REFERENCES photos(photoID) ON DELETE CASCADE
+		likeid INTEGER PRIMARY KEY AUTOINCREMENT,
+		userid INTEGER,
+		photoid INTEGER,
+		FOREIGN KEY(userid) REFERENCES users(userid) ON DELETE CASCADE,
+		FOREIGN KEY(photoid) REFERENCES photos(photoid) ON DELETE CASCADE
 	);`
 	_, err = db.Exec(likesQuery)
 	if err != nil {
 		return fmt.Errorf("error creating likes structure: %w", err)
 	}
-	commentQuery := `CREATE TABLE IF NOT EXISTS comments (
-		commentID INTEGER PRIMARY KEY AUTOINCREMENT,
-		userID INTEGER,
-		photoID INTEGER,
+	commentsQuery := `CREATE TABLE IF NOT EXISTS comments (
+		commentid INTEGER PRIMARY KEY AUTOINCREMENT,
+		userid INTEGER,
+		photoid INTEGER,
 		upload_date DATETIME,
 		commentText TEXT,
-		FOREIGN KEY(userID) REFERENCES users(userID) ON DELETE CASCADE,
-		FOREIGN KEY(photoID) REFERENCES photos(photoID) ON DELETE CASCADE
+		FOREIGN KEY(userid) REFERENCES users(userid) ON DELETE CASCADE,
+		FOREIGN KEY(photoid) REFERENCES photos(photoid) ON DELETE CASCADE
 	);`
 
-	_, err = db.Exec(commentQuery)
+	_, err = db.Exec(commentsQuery)
 	if err != nil {
 		return fmt.Errorf("error creating comments structure: %w", err)
 	}
