@@ -1,22 +1,82 @@
 package api
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
 )
+
+// uploadPhoto carica una nuova foto sul profilo dell'utente.
+func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userID, err := strconv.Atoi(ps.ByName("userid"))
+	if err != nil {
+		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.WithError(err).Error("uploadPhoto: Invalid user ID format.")
+		return
+	}
+
+	// Authorization
+	bearerToken := extractBearer(r.Header.Get("Authorization"))
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
+		return
+	}
+
+	var photo Photo
+	// Estrae l'immagine dal corpo della richiesta.
+	if err := json.NewDecoder(r.Body).Decode(&photo); err != nil {
+		// Se c'è un errore nella decodifica dell'immagine, restituisci uno stato di richiesta non valido.
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.WithError(err).Error("uploadPhoto: Invalid JSON format.")
+		return
+	}
+
+	// Leggi i dati dell'immagine dal corpo della richiesta.
+	imageData, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctx.Logger.WithError(err).Error("uploadPhoto: Error reading image data from request body.")
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(imageData))
+
+	// Aggiorna i dati della foto
+	photo.UserID = userID
+	photo.UploadDate = time.Now()
+	photo.LikesCount = 0
+	photo.CommentsCount = 0
+
+	// Create the photo in the database
+	createdPhoto, err := rt.db.CreatePhoto(photo.PhotoToDatabase())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctx.Logger.WithError(err).Error("uploadPhoto: Error creating photo in the database.")
+		return
+	}
+
+	photo.PhotoFromDatabase(createdPhoto)
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(photo)
+}
 
 // likePhoto aggiunge un like alla foto specificata.
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole mettere mi piace a una foto
-	userID, err := strconv.Atoi(ps.ByName("userID"))
+	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -26,14 +86,14 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// Authorization
 	bearerToken := extractBearer(r.Header.Get("Authorization"))
-	valid := validateRequestingUser(strconv.Itoa(userID), bearerToken)
-	if valid != 0 {
-		w.WriteHeader(valid)
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
 		return
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoID"))
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("likePhoto: Invalid photo ID format.")
@@ -65,7 +125,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole rimuovere il mi piace da una foto
-	userID, err := strconv.Atoi(ps.ByName("userID"))
+	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -75,21 +135,21 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Authorization
 	bearerToken := extractBearer(r.Header.Get("Authorization"))
-	valid := validateRequestingUser(strconv.Itoa(userID), bearerToken)
-	if valid != 0 {
-		w.WriteHeader(valid)
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
 		return
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoID"))
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unlikePhoto: Invalid photo ID format.")
 		return
 	}
 
-	likeID, err := strconv.Atoi(ps.ByName("likeID"))
+	likeID, err := strconv.Atoi(ps.ByName("likeid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unlikePhoto: Invalid like ID format.")
@@ -120,7 +180,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole commentare una foto
-	userID, err := strconv.Atoi(ps.ByName("userID"))
+	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -130,14 +190,14 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 	// Authorization
 	bearerToken := extractBearer(r.Header.Get("Authorization"))
-	valid := validateRequestingUser(strconv.Itoa(userID), bearerToken)
-	if valid != 0 {
-		w.WriteHeader(valid)
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
 		return
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoID"))
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("commentPhoto: Invalid photo ID format.")
@@ -173,7 +233,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole rimuovere il commento da una foto
-	userID, err := strconv.Atoi(ps.ByName("userID"))
+	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -183,21 +243,21 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 	// Authorization
 	bearerToken := extractBearer(r.Header.Get("Authorization"))
-	valid := validateRequestingUser(strconv.Itoa(userID), bearerToken)
-	if valid != 0 {
-		w.WriteHeader(valid)
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
 		return
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoID"))
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uncommentPhoto: Invalid photo ID format.")
 		return
 	}
 
-	commentID, err := strconv.Atoi(ps.ByName("commentID"))
+	commentID, err := strconv.Atoi(ps.ByName("commentid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uncommentPhoto: Invalid like ID format.")
@@ -228,7 +288,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 
 	// Estrai l'ID dell'utente che vuole rimuovere la foto
-	userID, err := strconv.Atoi(ps.ByName("userID"))
+	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
@@ -238,14 +298,14 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Authorization
 	bearerToken := extractBearer(r.Header.Get("Authorization"))
-	valid := validateRequestingUser(strconv.Itoa(userID), bearerToken)
-	if valid != 0 {
-		w.WriteHeader(valid)
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
 		return
 	}
 
 	// Estrai l'ID della foto dal path.
-	photoID, err := strconv.Atoi(ps.ByName("photoID"))
+	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("deletePhoto: Invalid photo ID format.")

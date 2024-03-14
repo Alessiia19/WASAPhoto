@@ -2,36 +2,54 @@ package api
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 )
 
 // --- AUTHENTICATION FUNCTIONS ---
 
-// funzione di validazione dell'utente
-func validateRequestingUser(identifier string, bearerToken string) int {
-	// Controlla se l'utente è registrato, altrimenti ritorna errore
-	if isNotLogged(bearerToken) {
+// validateRequestingUser checks if the user is authorized.
+// It returns the appropriate HTTP status based on the authentication result.
+func validateRequestingUser(userID, bearerToken string) int {
+	if !isUserLoggedIn(bearerToken) {
+		// The user is not authenticated.
 		return http.StatusForbidden
 	}
 
-	// Controlla se l'user è autorizzato
-	if identifier != bearerToken {
+	if userID != bearerToken {
+		// The user is not authorized.
 		return http.StatusUnauthorized
 	}
 
-	return 0
+	// The user is authorized.
+	return http.StatusOK
 }
 
-// estrae il token bearer
-func extractBearer(auth string) string {
-	var tokens = strings.Split(auth, " ")
-	if len(tokens) == 2 {
-		return strings.Trim(tokens[1], " ")
+// extractBearer extracts the Bearer token from an authentication string.
+func extractBearer(authHeader string) string {
+	parts := strings.Split(authHeader, " ")
+	if len(parts) == 2 {
+		return strings.TrimSpace(parts[1])
 	}
 	return ""
 }
 
-// Funzione che verifica se l'user è registrato
-func isNotLogged(bearerToken string) bool {
-	return bearerToken == ""
+// isUserLoggedIn checks if the user is logged in.
+// It returns true if the user is logged in, otherwise false.
+func isUserLoggedIn(bearerToken string) bool {
+	return bearerToken != ""
+}
+
+// --- USERNAME VALIDATION ---
+
+// isValidUsername checks if the username meets the requirements defined in the OpenAPI specification.
+func isValidUsername(username string) bool {
+	// Check if the length of the username is within the specified range.
+	if len(username) < 3 || len(username) > 16 {
+		return false
+	}
+
+	// Check if the username contains only alphanumeric characters.
+	match, _ := regexp.MatchString("^[a-zA-Z0-9]+$", username)
+	return match
 }
