@@ -39,6 +39,12 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		ctx.Logger.WithError(err).Error("setUsername: Invalid username format. Please follow the specified requirements.")
 		return
 	}
+	// Check if the username meets the requirements
+	if !isValidUsername(user.Username) {
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.Error("Login: Invalid username format. Please follow the specified requirements.")
+		return
+	}
 
 	// Aggiorna il nome utente nel database.
 	if err := rt.db.UpdateUsername(userID, user.Username); err != nil {
