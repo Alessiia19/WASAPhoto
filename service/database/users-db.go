@@ -13,7 +13,7 @@ func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 	// Controlla se l'username è già in uso da un altro utente.
 	var existingUserID int
 	err := db.c.QueryRow("SELECT userid FROM users WHERE username = ?", newUsername).Scan(&existingUserID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		// In caso di errore durante la ricerca dell'username, restituisci l'errore.
 		return fmt.Errorf("error checking existing username: %w", err)
 	}
