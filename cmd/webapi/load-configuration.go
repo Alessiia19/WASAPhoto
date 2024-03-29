@@ -26,7 +26,7 @@ type WebAPIConfiguration struct {
 	}
 	Debug bool
 	DB    struct {
-		Filename string `conf:"default:/home/alessia/Progetto WASA/fantastic-coffee-decaffeinated-master/decaf.db"`
+		Filename string `conf:"default:/home/alessia/Progetto WASA/fantastic-coffee-decaffeinated-master/fantastic-coffee-decaffeinated-master/decaf.db"`
 	}
 }
 
