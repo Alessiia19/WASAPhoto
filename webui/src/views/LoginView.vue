@@ -6,6 +6,7 @@ export default {
       errormsg: null
     };
   },
+
   methods: {
     async login() {
       try {
@@ -13,16 +14,25 @@ export default {
           username: this.username.trim()
         });
 
-        // Dopo aver ricevuto il token di accesso dal backend
+        // Dopo aver ricevuto l'user id dal backend
         localStorage.setItem("userID", response.data.userID);
         
-        // Redirect alla home o a un'altra pagina dopo il login
+        // Redirect alla home dopo il login
         this.$router.replace("/home");
+        this.$emit('changeLoginStatus', true)
+
       } catch (error) {
         // Gestione degli errori
         this.errormsg = error.response.data.message;
       }
-    }
+    },
+
+    mounted(){
+      if (localStorage.getItem('userID')){
+        this.$router.replace("/home")
+      }
+    },
+
   }
 };
 </script>
