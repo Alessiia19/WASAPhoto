@@ -18,13 +18,16 @@ const router = createRouter({
 		}, 
     	{ 
 			path: '/home',
+			name: 'home',
 			component: HomeView 	// Home screen
 		}, 
-		{	path: '/link1', 
+		{	path: '/link1',
+			name: 'uploadPhoto',
 			component: UploadPhotoView	// Screen where you can upload a new photo
 		},
 		{
-			path: '/some/:id/link',
+			path: '/users/:userid',
+			name: 'profile',
 			component: ProfileView	// User profile screen
 		},
 	]

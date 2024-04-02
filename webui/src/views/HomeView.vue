@@ -46,7 +46,7 @@
 							  </svg>
 						  </span>
 					  </div>
-					  <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="button-search">
+					  <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="button-search" name="searchbar">
 					  <button class="btn btn-outline-secondary" type="button" id="button-search">Search</button>
 				  </div>
 			  </div>
