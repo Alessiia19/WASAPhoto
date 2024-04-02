@@ -16,8 +16,12 @@ const router = createRouter({
 			path: '/session',
 			component: LoginView 	// Login screen
 		}, 
-    	{ 
+		{
 			path: '/home',
+			redirect: '/users/:userid/stream'
+		},
+    	{ 
+			path: '/users/:userid/stream',
 			name: 'home',
 			component: HomeView 	// Home screen
 		}, 

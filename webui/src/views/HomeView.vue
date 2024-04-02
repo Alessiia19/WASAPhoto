@@ -6,7 +6,8 @@
 			return {
 				errormsg: null,
 				loading: false,
-				some_data: null,
+				userID: localStorage.getItem('userID'),
+				username: localStorage.getItem('username'),
 			}
 		},
 

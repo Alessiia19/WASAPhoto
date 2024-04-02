@@ -2,35 +2,37 @@
 export default {
   data: function() {
     return {
+      errormsg: null,
+      loading: false,
       username: "",
-      errormsg: null
+      user: { userID: 0, username: ""}
     };
   },
 
   methods: {
     async login() {
 
-      // Validazione dell'username
+      // Username validation
       if (!this.validateUsername()) {
-        return; // Interrompi il processo di login se la validazione fallisce
+        return; 
       }
 
       try {
-        let response = await this.$axios.post("/session", {
-          username: this.username.trim()
-        });
+        let response = await this.$axios.post("/session", {username: this.username.trim()})
 
-        // Dopo aver ricevuto l'user id dal backend
-        localStorage.setItem("userID", response.data.userID);
-        console.log("Contenuto attuale del localStorage:", localStorage);
-        
+        // Dopo aver ricevuto l'user id dal backend setta i valori 
+        this.user = response.data
+        localStorage.setItem("userID", this.user.userID)
+        localStorage.setItem("username", this.user.username)
+        console.log("User loggato:", this.user)
+        console.log("Localstorage:", localStorage)
+
         // Redirect alla home dopo il login
-        this.$router.replace("/home");
-        this.$emit('changeLoginStatus', true,  response.data.userID);
+        this.$router.replace({ path: '/users/' + this.user.userID + '/stream' })
 
       } catch (error) {
         // Gestione degli errori
-        this.errormsg = error.response.data.message;
+        this.errormsg = error.response.data.message
       }
     },
 
@@ -56,7 +58,7 @@ export default {
 
     mounted(){
       if (localStorage.getItem('userID')){
-        this.$router.replace("/home")
+        this.$router.replace({ path: '/users/' + localStorage.getItem('userID') + '/stream' });
       }
     },
 
