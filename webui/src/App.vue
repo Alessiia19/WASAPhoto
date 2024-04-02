@@ -6,18 +6,22 @@ export default {
 	data(){
 		return{
 			isLogged: false,
+			userID: localStorage.getItem('userID'),
 		}
 	},
 
 	methods:{
 
 		doLogout(loginStatus){
-			this.isLogged = loginStatus
-			this.$router.replace("/session")
+			console.log('Logging out:', loginStatus);
+			this.isLogged = loginStatus;
+			this.userID = null;
+			this.$router.replace("/session");
 		},
 
 		changeLoginStatus(loginStatus){
-			this.isLogged = loginStatus
+			console.log('Changing login status:', loginStatus);
+			this.isLogged = loginStatus;
 		},
 
 
@@ -27,6 +31,7 @@ export default {
 	created() {
 		if (!localStorage.getItem('appInitialized')) {
 			localStorage.clear();
+			console.log("Contenuto attuale del localStorage:", localStorage);
 			localStorage.setItem('appInitialized', true);
 		}
 	},
@@ -48,8 +53,7 @@ export default {
 		<div class="row">
 			<div class="col p-0">
 				<main>
-					<Sidebar v-if="isLogged"
-					@doLogoutMethod="doLogout"/>
+					<Sidebar :currentRoute="$route.name" :userID="userID"/>
 					
 					<RouterView
 					@changeLoginStatusmethod="changeLoginStatus"/>
@@ -57,13 +61,6 @@ export default {
 			</div>
 		</div>
 	</div>
-
-
-	<!--
-	<div id="app">
-		 La rotta principale verrà gestita dal router 
-		<router-view />
-	</div>-->
 </template>
 
 <style>

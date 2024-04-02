@@ -9,6 +9,12 @@ export default {
 
   methods: {
     async login() {
+
+      // Validazione dell'username
+      if (!this.validateUsername()) {
+        return; // Interrompi il processo di login se la validazione fallisce
+      }
+
       try {
         let response = await this.$axios.post("/session", {
           username: this.username.trim()
@@ -16,14 +22,35 @@ export default {
 
         // Dopo aver ricevuto l'user id dal backend
         localStorage.setItem("userID", response.data.userID);
+        console.log("Contenuto attuale del localStorage:", localStorage);
         
         // Redirect alla home dopo il login
         this.$router.replace("/home");
-        this.$emit('changeLoginStatus', true)
+        this.$emit('changeLoginStatus', true,  response.data.userID);
 
       } catch (error) {
         // Gestione degli errori
         this.errormsg = error.response.data.message;
+      }
+    },
+
+    handleUsernameInput() {
+      // Chiamata alla funzione di validazione durante ogni inserimento
+      this.validateUsername();
+    },
+
+    validateUsername() {
+      // Validazione dell'username utilizzando i criteri forniti
+      const usernameRegex = /^[a-zA-Z0-9]+$/;
+      if (!usernameRegex.test(this.username.trim())) {
+        this.errormsg = "L'username deve contenere solo lettere e numeri.";
+        return false;
+      } else if (this.username.length < 3 || this.username.length > 16) {
+        this.errormsg = "L'username deve essere compreso tra 3 e 16 caratteri.";
+        return false;
+      } else {
+        this.errormsg = null; // Resetta il messaggio di errore se la validazione ha successo
+        return true;
       }
     },
 
@@ -41,25 +68,33 @@ export default {
   <div class="login-container">
     <div class="app-name">
       <h1 class="app-title">WASAPhoto</h1>
-      <div class="underline"></div> <!-- Riga sottostante -->
+      <div class="underline"></div> 
     </div>
-    <div class="login-box">
-      <h2 class="login-title">Login</h2>
-      <form @submit.prevent="login">
-        <div class="form-group">
-          <label for="username" class="form-label">Username</label>
-          <input type="text" class="form-control" id="username" v-model="username" required>
-        </div>
-        <div class="text-center">
-          <button type="submit" class="btn btn-primary">Login</button>
-        </div>
-      </form>
+    <div class="login-wrapper">
+      <div class="login-box">
+        <h2 class="login-title">Login</h2>
+        <form @submit.prevent="login">
+          <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" v-model="username" required autocomplete="username" @input="handleUsernameInput">
+            <div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary">Login</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 
 <style scoped>
+
+.login-wrapper {
+  position: relative; /* Posizionamento relativo per il contenitore */
+}
+
 .login-container {
   background: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);
   background-size: cover;
@@ -93,6 +128,8 @@ export default {
   padding: 60px;  /* Spaziatura interna del box di login */
   border-radius: 15px; /* Arrotondamento dei bordi del box di login */
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);  /* Ombra del box di login */
+  height: 320px; /* Altezza fissa del riquadro di login */
+  width: 400px; /* Larghezza fissa del riquadro di login */
 }
 
 .login-title {
@@ -123,6 +160,10 @@ export default {
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+  position: absolute; /* Posizionamento assoluto per il pulsante */
+  bottom: 20px; /* Distanza dal fondo */
+  left: 50%; /* Allineamento al centro */
+  transform: translateX(-50%); /* Per centrare orizzontalmente */
 }
 
 .btn-primary:hover {
