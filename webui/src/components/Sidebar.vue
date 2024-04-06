@@ -28,7 +28,6 @@
 			async logoutButton() {
 				localStorage.removeItem('userID');
 				localStorage.removeItem('username');
-				console.log("user rimosso", localStorage);
 				this.$router.replace('/session');
 			}
 		}
