@@ -57,13 +57,14 @@ func (p *Photo) PhotoToDatabase() database.Photo {
 }
 
 type Profile struct {
-	UserID         int     `json:"userID"`         // User's identifier
-	Username       string  `json:"username"`       // User's username
-	Followers      []User  `json:"followers"`      // followers list
-	Following      []User  `json:"following"`      // following list
-	FollowersCount int     `json:"followersCount"` // followers number
-	FollowingCount int     `json:"followingCount"` // following number
-	UploadedPhotos []Photo `json:"uploadedPhotos"`
+	UserID              int     `json:"userID"`              // User's identifier
+	Username            string  `json:"username"`            // User's username
+	Followers           []User  `json:"followers"`           // followers list
+	Following           []User  `json:"following"`           // following list
+	FollowersCount      int     `json:"followersCount"`      // followers number
+	FollowingCount      int     `json:"followingCount"`      // following number
+	UploadedPhotos      []Photo `json:"uploadedPhotos"`      // Photos array
+	UploadedPhotosCount int     `json:"uploadedPhotosCount"` // Uploaded photos number
 }
 
 type Like struct {

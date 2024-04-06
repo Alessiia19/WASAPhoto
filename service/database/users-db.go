@@ -246,13 +246,14 @@ func (db *appdbimpl) GetUserProfile(requestingUserID, requestedUserID int) (Prof
 
 	// Costruire il profilo dell'utente
 	profile = Profile{
-		UserID:         user.UserID,
-		Username:       user.Username,
-		Followers:      followers,
-		Following:      following,
-		FollowersCount: len(followers),
-		FollowingCount: len(following),
-		UploadedPhotos: uploadedPhotos,
+		UserID:              user.UserID,
+		Username:            user.Username,
+		Followers:           followers,
+		Following:           following,
+		FollowersCount:      len(followers),
+		FollowingCount:      len(following),
+		UploadedPhotos:      uploadedPhotos,
+		UploadedPhotosCount: len(uploadedPhotos),
 	}
 	return profile, err
 }
