@@ -1,6 +1,8 @@
 package api
 
 import (
+	"bytes"
+	"image"
 	"net/http"
 	"regexp"
 	"strings"
@@ -52,4 +54,27 @@ func isValidUsername(username string) bool {
 	// Check if the username contains only alphanumeric characters.
 	match, _ := regexp.MatchString("^[a-zA-Z0-9]+$", username)
 	return match
+}
+
+// --- PHOTO FORMAT VALIDATION ---
+
+// CheckImageType verifica che il contenuto sia di tipo PNG o JPG.
+func CheckImageType(data []byte) bool {
+	contentType := http.DetectContentType(data)
+	switch contentType {
+	case "image/jpeg", "image/png":
+		return true
+	default:
+		return false
+	}
+}
+
+// ValidateImage verifica che il file sia effettivamente un'immagine PNG o JPG.
+func ValidateImage(data []byte) bool {
+	_, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return false
+	}
+
+	return format == "jpeg" || format == "png"
 }

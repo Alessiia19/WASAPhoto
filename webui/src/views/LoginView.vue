@@ -1,11 +1,11 @@
 <script>
 export default {
-  data: function() {
+  data: function () {
     return {
       errormsg: null,
       loading: false,
       username: "",
-      user: { userID: 0, username: ""}
+      user: { userID: 0, username: "" }
     };
   },
 
@@ -14,11 +14,11 @@ export default {
 
       // Username validation
       if (!this.validateUsername()) {
-        return; 
+        return;
       }
 
       try {
-        let response = await this.$axios.post("/session", {username: this.username.trim()})
+        let response = await this.$axios.post("/session", { username: this.username.trim() })
 
         // Dopo aver ricevuto l'user id dal backend setta i valori 
         this.user = response.data
@@ -28,7 +28,7 @@ export default {
         console.log("Localstorage:", localStorage)
 
         // Redirect alla home dopo il login
-        this.$router.replace({ path: '/users/' + this.user.userID + '/stream' })
+        this.$router.replace({ path: '/users/' + this.user.username + '/stream' })
 
       } catch (error) {
         // Gestione degli errori
@@ -42,7 +42,6 @@ export default {
     },
 
     validateUsername() {
-      // Validazione dell'username utilizzando i criteri forniti
       const usernameRegex = /^[a-zA-Z0-9]+$/;
       if (!usernameRegex.test(this.username.trim())) {
         this.errormsg = "L'username deve contenere solo lettere e numeri.";
@@ -56,9 +55,9 @@ export default {
       }
     },
 
-    mounted(){
-      if (localStorage.getItem('userID')){
-        this.$router.replace({ path: '/users/' + localStorage.getItem('userID') + '/stream' });
+    mounted() {
+      if (localStorage.getItem('username')) {
+        this.$router.replace({ path: '/users/' + localStorage.getItem('username') + '/stream' });
       }
     },
 
@@ -70,7 +69,7 @@ export default {
   <div class="login-container">
     <div class="app-name">
       <h1 class="app-title">WASAPhoto</h1>
-      <div class="underline"></div> 
+      <div class="underline"></div>
     </div>
     <div class="login-wrapper">
       <div class="login-box">
@@ -78,7 +77,8 @@ export default {
         <form @submit.prevent="login">
           <div class="form-group">
             <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" id="username" v-model="username" required autocomplete="username" @input="handleUsernameInput">
+            <input type="text" class="form-control" id="username" v-model="username" required autocomplete="username"
+              @input="handleUsernameInput">
             <div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
           </div>
           <div class="text-center">
@@ -92,9 +92,9 @@ export default {
 
 
 <style scoped>
-
 .login-wrapper {
-  position: relative; /* Posizionamento relativo per il contenitore */
+  position: relative;
+  /* Posizionamento relativo per il contenitore */
 }
 
 .login-container {
@@ -107,35 +107,52 @@ export default {
 }
 
 .app-name {
-  position: absolute; /* Posizionamento assoluto */
-  top: 160px; /* Distanza dal top */
-  left: 690px; /* Distanza dalla sinistra */
+  position: absolute;
+  /* Posizionamento assoluto */
+  top: 160px;
+  /* Distanza dal top */
+  left: 690px;
+  /* Distanza dalla sinistra */
 }
 
 .app-title {
-  color: #00264d; /* Colore del titolo dell'applicazione */
-  font-weight: bold; /* Rende il titolo in grassetto */
-  font-size: 50px; /* Dimensione del titolo dell'applicazione */
+  color: #00264d;
+  /* Colore del titolo dell'applicazione */
+  font-weight: bold;
+  /* Rende il titolo in grassetto */
+  font-size: 50px;
+  /* Dimensione del titolo dell'applicazione */
 }
 
 .underline {
-  width: 300px; /* Lunghezza della riga sottostante */
-  height: 2px; /* Spessore della riga sottostante */
-  background-color: #00264d; /* Colore della riga sottostante */
-  margin-top: 5px; /* Spazio sopra la riga sottostante */
+  width: 300px;
+  /* Lunghezza della riga sottostante */
+  height: 2px;
+  /* Spessore della riga sottostante */
+  background-color: #00264d;
+  /* Colore della riga sottostante */
+  margin-top: 5px;
+  /* Spazio sopra la riga sottostante */
 }
 
 .login-box {
-  background-color: #ffffff; /* Colore del rettangolo del box di login */
-  padding: 60px;  /* Spaziatura interna del box di login */
-  border-radius: 15px; /* Arrotondamento dei bordi del box di login */
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);  /* Ombra del box di login */
-  height: 320px; /* Altezza fissa del riquadro di login */
-  width: 400px; /* Larghezza fissa del riquadro di login */
+  background-color: #ffffff;
+  /* Colore del rettangolo del box di login */
+  padding: 60px;
+  /* Spaziatura interna del box di login */
+  border-radius: 15px;
+  /* Arrotondamento dei bordi del box di login */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  /* Ombra del box di login */
+  height: 320px;
+  /* Altezza fissa del riquadro di login */
+  width: 400px;
+  /* Larghezza fissa del riquadro di login */
 }
 
 .login-title {
-  color: #00264d; /* Colore del titolo */
+  color: #00264d;
+  /* Colore del titolo */
   text-align: center;
   margin-bottom: 40px;
   font-weight: bold;
@@ -147,28 +164,38 @@ export default {
 }
 
 .form-label {
-  color: #00264d; /* Colore delle etichette dei campi di input */
+  color: #00264d;
+  /* Colore delle etichette dei campi di input */
 }
 
 .form-control {
-  background-color: #385273; /* Colore di sfondo del campo di input */
-  color: #ffffff; /* Colore del testo del campo di input */
+  background-color: #385273;
+  /* Colore di sfondo del campo di input */
+  color: #ffffff;
+  /* Colore del testo del campo di input */
 }
 
 .btn-primary {
-  background-color: #00264d; /* Colore di sfondo del bottone */
-  color: #ffffff; /* Colore del testo del bottone */
+  background-color: #00264d;
+  /* Colore di sfondo del bottone */
+  color: #ffffff;
+  /* Colore del testo del bottone */
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
-  position: absolute; /* Posizionamento assoluto per il pulsante */
-  bottom: 20px; /* Distanza dal fondo */
-  left: 50%; /* Allineamento al centro */
-  transform: translateX(-50%); /* Per centrare orizzontalmente */
+  position: absolute;
+  /* Posizionamento assoluto per il pulsante */
+  bottom: 20px;
+  /* Distanza dal fondo */
+  left: 50%;
+  /* Allineamento al centro */
+  transform: translateX(-50%);
+  /* Per centrare orizzontalmente */
 }
 
 .btn-primary:hover {
-  background-color: #001a33; /* Cambio di colore al passaggio del mouse sul bottone */
+  background-color: #001a33;
+  /* Cambio di colore al passaggio del mouse sul bottone */
 }
 </style>

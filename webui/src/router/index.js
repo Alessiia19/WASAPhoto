@@ -18,10 +18,10 @@ const router = createRouter({
 		}, 
 		{
 			path: '/home',
-			redirect: '/users/:userid/stream'
+			redirect: '/users/:username/stream'
 		},
     	{ 
-			path: '/users/:userid/stream',
+			path: '/users/:username/stream',
 			name: 'home',
 			component: HomeView 	// Home screen
 		}, 
@@ -30,7 +30,7 @@ const router = createRouter({
 			component: UploadPhotoView	// Screen where you can upload a new photo
 		},
 		{
-			path: '/users/:userid',
+			path: '/users/:username',
 			name: 'profile',
 			component: ProfileView	// User profile screen
 		},

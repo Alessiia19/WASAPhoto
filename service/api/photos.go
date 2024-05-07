@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -35,22 +34,19 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var photo Photo
-	// Estrae l'immagine dal corpo della richiesta.
-	if err := json.NewDecoder(r.Body).Decode(&photo); err != nil {
-		// Se c'è un errore nella decodifica dell'immagine, restituisci uno stato di richiesta non valido.
-		w.WriteHeader(http.StatusBadRequest)
-		ctx.Logger.WithError(err).Error("uploadPhoto: Invalid JSON format.")
+	photo.ImageData, err = io.ReadAll(r.Body)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("uploadPhoto: error reading body content")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// Leggi i dati dell'immagine dal corpo della richiesta.
-	imageData, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		ctx.Logger.WithError(err).Error("uploadPhoto: Error reading image data from request body.")
+	// Eseguire i controlli sul tipo di immagine
+	if !CheckImageType(photo.ImageData) || !ValidateImage(photo.ImageData) {
+		ctx.Logger.Error("uploadPhoto: unsupported image format")
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	r.Body = io.NopCloser(bytes.NewBuffer(imageData))
 
 	// Aggiorna i dati della foto
 	photo.UserID = userID
