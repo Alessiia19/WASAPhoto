@@ -13,8 +13,19 @@ export default {
 				username: '',
 				followersCount: 0,
 				followingCount: 0,
+				uploadedPhotos: [
+					{
+						photoID: 0,
+						userID:  0,
+						imageData: '',
+						uploadDate: '',
+						likesCount: 0,
+						commentsCount: 0,
+					}
+				],
 				uploadedPhotosCount: 0,
 			}
+
 		}
 	},
 
@@ -31,7 +42,8 @@ export default {
 					}
 				});
 				this.userProfile = response.data;
-				this.username = response.data.username
+				this.username = response.data.username;
+				//this.userProfile.username = this.username;
 				localStorage.setItem("username", this.username)
 				this.$router.push({ path: '/users/' + this.username })
 
@@ -92,6 +104,15 @@ export default {
 
 		<!-- Profile area -->
 		<main class="profile-area">
+
+			<!-- Photos area -->
+			<div class="photos-grid" v-if="userProfile.uploadedPhotosCount > 0">
+				<div v-for="photo in this.userProfile.uploadedPhotos" :key="photo.photoID" class="photo-card">
+					<img :src="'data:image/jpeg;base64,' + photo.imageData" class="photo-img">
+				</div>
+			</div>
+
+			<!-- User card -->
 			<div class="profile-card">
 				<div class="profile-photo"></div>
 				<div class="profile-info">
@@ -123,7 +144,7 @@ export default {
 					<path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4z"/>
 					<path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5m0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
 				</svg>
-				<p class="no-posts-text">No posts yet</p>
+				<p class="no-posts-text unselectable">No posts yet</p>
 			</div>
 		</main>
 	</div>
@@ -145,8 +166,35 @@ export default {
 
 .profile-area {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
+	flex-direction: row;
+	align-items: flex-start;
+	justify-content: flex-end; 
+	width: calc(100% - 300px);
+	margin-left: 300px; /*sidebar*/
+}
+
+.photos-grid {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	margin-top: 20px;	
+	width: auto;
+	flex-grow: 1;
+}
+
+.photo-card {
+	width: calc(33.333% - 20px); /* three photos per row, accounting for margin */
+	margin: 10px;
+	background: #fff;
+	border-radius: 15px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	overflow: hidden; /* Keeps the image within the borders */
+}
+
+.photo-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover; /* Makes images cover the card area without distorting aspect ratio */
 }
 
 .no-posts-container {
@@ -173,7 +221,8 @@ export default {
 }
 
 .profile-card {
-	margin-left: auto;
+	/*margin-left: auto;*/
+	margin-left: 30px;
 	margin-right: 15px;
 	margin-top: 15px;
 	display: flex;
@@ -183,7 +232,8 @@ export default {
 	border-radius: 15px;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 	padding: 20px;
-	width: 340px;
+	/*width: 340px;*/
+	width: 25%;
 }
 
 .unselectable {
