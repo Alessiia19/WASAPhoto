@@ -5,6 +5,7 @@ export default {
     data() {
         return {
             errormsg: null,
+            successmsg: null,
             loading: false,
             some_data: null,
             image: null,
@@ -30,13 +31,16 @@ export default {
             //this.image = event.target.files[0];
             this.image = this.$refs.file.files[0];
             this.previewImage = URL.createObjectURL(this.image);
+            this.errormsg = null;
+            this.successmsg = null;
         },
 
 
         // Metodo per effettuare il caricamento effettivo del file
         async uploadPhoto() {
             if (!this.image) {
-                alert("Please select a photo to upload.");
+                //alert("Please select a photo to upload.");
+                this.errormsg = "Please select a photo to upload";
                 return;
             }
             try {
@@ -51,11 +55,13 @@ export default {
 						}
 					});
 
-                console.log("File uploaded successfully. PhotoID:", + response.data.photoID);
+                console.log("Photo uploaded successfully. PhotoID:", + response.data.photoID);
+                this.successmsg = "Photo uploaded successfully!"
 
             } catch (error) {
                 console.error('Error uploading file:', error);
-                alert("An error occurred while uploading the file:" + error.response.data);
+                //alert("An error occurred while uploading the file:" + error.response.data);
+                this.errormsg = "Unsupported image format. Please upload a PNG or JPG file";
             } finally {
                 this.loading = false;
                 //this.image = null;
@@ -84,6 +90,9 @@ export default {
                             Upload Photo</h1>
 
                         <input type="file" @change="handleFileUpload" accept="image/png, image/jpeg" class="form-control mt-4 mb-3" ref="file">
+                        <div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+                        <div v-if="successmsg" class="text-success ml-1">{{ successmsg }}</div>
+                        
 
                         <!-- Aggiungi l'anteprima dell'immagine -->
                         <div v-if="previewImage" class="mt-3">

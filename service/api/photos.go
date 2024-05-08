@@ -42,7 +42,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Eseguire i controlli sul tipo di immagine
-	if !CheckImageType(photo.ImageData) || !ValidateImage(photo.ImageData) {
+	if !CheckImageType(photo.ImageData) && !ValidateImage(photo.ImageData) {
 		ctx.Logger.Error("uploadPhoto: unsupported image format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
