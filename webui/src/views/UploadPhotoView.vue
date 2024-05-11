@@ -95,9 +95,9 @@ export default {
                         
 
                         <!-- Aggiungi l'anteprima dell'immagine -->
-                        <div v-if="previewImage" class="mt-3">
-                            <h5>Preview:</h5>
-                            <img :src="previewImage" alt="Preview" style="max-width: 100%;">
+                        <h5>Preview:</h5>
+                        <div v-if="previewImage" class="preview-photo-card">
+                            <img :src="previewImage" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
 
                         <!-- Aggiungi il pulsante di caricamento -->
@@ -125,6 +125,15 @@ export default {
     /* Dimensione del titolo dell'applicazione */
     margin-left: 17px;
     margin-top: 7px;
+}
+
+.preview-photo-card {
+	width: calc(33.333% - 20px); /* three photos per row, accounting for margin */
+	margin: 10px;
+	background: #fff;
+	border-radius: 15px;
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+	overflow: hidden; /* Keeps the image within the borders */
 }
 
 .unselectable {

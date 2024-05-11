@@ -288,3 +288,28 @@ func (db *appdbimpl) GetMyStream(userID int) ([]Photo, error) {
 
 	return stream, nil
 }
+
+// GetUsers cerca gli utenti per username che contiene la sottostringa specificata.
+func (db *appdbimpl) GetUsers(usernameSubstring string) ([]User, error) {
+	var users []User
+	query := "SELECT userid, username FROM users WHERE username LIKE ?"
+	rows, err := db.c.Query(query, "%"+usernameSubstring+"%")
+	if err != nil {
+		return nil, fmt.Errorf("error querying users by username substring: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.UserID, &user.Username); err != nil {
+			return nil, fmt.Errorf("error scanning user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return users, nil
+}

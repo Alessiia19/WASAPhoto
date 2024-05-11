@@ -52,6 +52,7 @@ type AppDatabase interface {
 	DeletePhoto(int, int) error
 	GetUserProfile(int, int) (Profile, error)
 	GetMyStream(int) ([]Photo, error)
+	GetUsers(string) ([]User, error)
 
 	// utils
 	GetPhotoUserID(int) (int, error)
