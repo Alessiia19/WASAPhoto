@@ -309,7 +309,43 @@ paths:
           
         '404':
           $ref: '#/components/responses/NotFoundError'
-
+  
+  /users:
+    get:
+      tags: ["User"]
+      summary: Retrieves a list of users
+      description: |-
+        Users can be searched by their username using the search bar, which
+        returns a series of users matching the search criteria.
+      operationId: getUsers
+      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: returns the array containing the users searched
+                type: object
+                properties:
+                  users:
+                    type: array
+                    description: Contains the users searched
+                    minItems: 0
+                    maxItems: 5000
+                    items:
+                      $ref: '#/components/schemas/username'
+                  
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+          
+  
   /users/{userid}/photos:
     post:
       tags: ["Photos"]

@@ -322,3 +322,28 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(stream)
 }
+
+// getUsers cerca gli utenti che contengono una specifica sottostringa nel loro username
+func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Ottieni la sottostringa di ricerca dall'URL query parameter "username"
+	query := r.URL.Query().Get("username")
+	if query == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.Error("getUsers: Query 'username' is missing")
+		return
+	}
+
+	// Chiama la funzione del database per ottenere gli utenti corrispondenti
+	users, err := rt.db.GetUsers(query)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctx.Logger.WithError(err).Error("getUsers: Error fetching users from database")
+		return
+	}
+
+	// Invia la risposta JSON con la lista degli utenti trovati
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(users)
+}

@@ -134,7 +134,7 @@ export default {
 						userProfile.followersCount }}</span></p>
 					<p class="info"><span class="info-label">Following:</span> <span class="info-value">{{
 						userProfile.followingCount }}</span></p>
-					<p class="info"><span class="info-label">Uploads:</span> <span class="info-value">{{
+					<p class="info"><span class="info-label">Post:</span> <span class="info-value">{{
 						userProfile.uploadedPhotosCount }}</span></p>
 				</div>
 			</div>
@@ -187,8 +187,9 @@ export default {
 	margin: 10px;
 	background: #fff;
 	border-radius: 15px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 	overflow: hidden; /* Keeps the image within the borders */
+	
 }
 
 .photo-img {
