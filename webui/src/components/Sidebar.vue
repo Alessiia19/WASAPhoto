@@ -13,7 +13,7 @@
 		
 		methods: {
 
-			navigateTo(path) {
+			async navigateTo(path) {
 				const username = localStorage.getItem('username');
 				if (!username) {
 					console.error('Username non trovato nel localStorage');
@@ -30,7 +30,7 @@
 				localStorage.removeItem('username');
 				this.$router.replace('/session');
 			}
-		}
+		} 
 	};		
 </script>
 

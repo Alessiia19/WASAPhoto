@@ -95,13 +95,13 @@ export default {
                         
 
                         <!-- Aggiungi l'anteprima dell'immagine -->
-                        <h5>Preview:</h5>
+                        <h5 v-if="previewImage">Preview:</h5>
                         <div v-if="previewImage" class="preview-photo-card">
                             <img :src="previewImage" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
 
                         <!-- Aggiungi il pulsante di caricamento -->
-                        <button @click="uploadPhoto" class="btn btn-primary mt-3">Upload</button>
+                        <button v-if="previewImage" @click="uploadPhoto" class="btn btn-primary mt-3">Upload</button>
                     </div>
                 </div>
             </div>

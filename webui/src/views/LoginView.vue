@@ -5,6 +5,7 @@ export default {
       errormsg: null,
       loading: false,
       username: "",
+      userToSearchID: 0,
       user: { userID: 0, username: "" }
     };
   },
@@ -24,6 +25,7 @@ export default {
         this.user = response.data
         localStorage.setItem("userID", this.user.userID)
         localStorage.setItem("username", this.user.username)
+        localStorage.setItem("userToSearchID", this.userToSearchID)
         console.log("User loggato:", this.user)
         console.log("Localstorage:", localStorage)
 
