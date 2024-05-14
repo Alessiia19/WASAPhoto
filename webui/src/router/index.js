@@ -32,7 +32,8 @@ const router = createRouter({
 		{
 			path: '/users/:username',
 			name: 'profile',
-			component: ProfileView	// User profile screen
+			component: ProfileView,	// User profile screen
+			props: true
 		},
 	]
 })

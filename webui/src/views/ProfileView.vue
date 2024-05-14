@@ -5,10 +5,12 @@ export default {
 	data: function () {
 		return {
 			isEditingUsername: false,
+			isMyProfile: false,
 			errormsg: null,
 			loading: false,
 			userID: localStorage.getItem('userID'),
 			username: localStorage.getItem('username'),
+			userToSearchID: localStorage.getItem('userToSearchID'),
 			userProfile: {
 				username: '',
 				followersCount: 0,
@@ -16,7 +18,7 @@ export default {
 				uploadedPhotos: [
 					{
 						photoID: 0,
-						userID:  0,
+						userID: 0,
 						imageData: '',
 						uploadDate: '',
 						likesCount: 0,
@@ -30,26 +32,65 @@ export default {
 	},
 
 	async mounted() {
+		this.checkIfOwnProfile();
 		await this.loadProfileData();
+
+	},
+
+	watch: {
+		'$route.params.username': 'handleRouteChange'
 	},
 
 	methods: {
-		async loadProfileData() {
-			try {
-				let response = await this.$axios.get('/users/' + this.userID, {
-					headers: {
-						Authorization: "Bearer " + this.userID
-					}
-				});
-				this.userProfile = response.data;
-				this.username = response.data.username;
-				//this.userProfile.username = this.username;
-				localStorage.setItem("username", this.username)
-				this.$router.push({ path: '/users/' + this.username })
 
-			} catch (error) {
-				console.error('Errore nel recupero dei dati del profilo:', error);
+		async loadProfileData() {
+			console.log("Inizio caricamento dati profilo, isMyProfile:", this.isMyProfile);
+			if (this.isMyProfile) {
+				try {
+					let response = await this.$axios.get('/users/' + this.userID, {
+						headers: {
+							Authorization: "Bearer " + this.userID
+						}
+					});
+					this.userProfile = response.data;
+					this.username = response.data.username;
+					localStorage.setItem("username", this.username)
+					this.$router.push({ path: '/users/' + this.username })
+
+				} catch (error) {
+					console.error('Errore nel recupero dei dati del profilo:', error);
+				}
 			}
+
+			else if (!this.isMyProfile) {
+				try {
+					let response = await this.$axios.get('/users/' + this.userToSearchID, {
+						headers: {
+							Authorization: "Bearer " + this.userID
+						}
+					});
+					this.userProfile = response.data;
+					this.username = response.data.username;
+					this.$router.push({ path: '/users/' + this.$route.params.username })
+
+				} catch (error) {
+					console.error('Errore nel recupero dei dati del profilo:', error);
+				}
+			}
+			if (this.$route.params.username != this.username) {
+				window.location.reload();
+			}
+		},
+
+		async checkIfOwnProfile() {
+			const routeUsername = this.$route.params.username;
+			this.isMyProfile = (routeUsername === this.username);
+
+		},
+
+		handleRouteChange() {
+			this.checkIfOwnProfile();
+			this.loadProfileData();
 		},
 
 		enableEditing() {
@@ -117,7 +158,7 @@ export default {
 				<div class="profile-photo"></div>
 				<div class="profile-info">
 					<h2 class="username" v-if="!isEditingUsername">{{ userProfile.username }}
-						<button class="edit-icon-button" @click="enableEditing">
+						<button v-if="isMyProfile" class="edit-icon-button" @click="enableEditing">
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
 								class="bi bi-pencil-fill" viewBox="0 0 16 16">
 								<path
@@ -131,18 +172,21 @@ export default {
 					<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
 
 					<p class="info"><span class="info-label">Followers:</span> <span class="info-value">{{
-						userProfile.followersCount }}</span></p>
+				userProfile.followersCount }}</span></p>
 					<p class="info"><span class="info-label">Following:</span> <span class="info-value">{{
-						userProfile.followingCount }}</span></p>
+				userProfile.followingCount }}</span></p>
 					<p class="info"><span class="info-label">Post:</span> <span class="info-value">{{
-						userProfile.uploadedPhotosCount }}</span></p>
+				userProfile.uploadedPhotosCount }}</span></p>
 				</div>
 			</div>
-			
-			<div  v-if="userProfile.uploadedPhotosCount === 0" class="no-posts-container">
-				<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi-camera" viewBox="0 0 16 16">
-					<path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4z"/>
-					<path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5m0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
+
+			<div v-if="userProfile.uploadedPhotosCount === 0" class="no-posts-container">
+				<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi-camera"
+					viewBox="0 0 16 16">
+					<path
+						d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4z" />
+					<path
+						d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5m0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0" />
 				</svg>
 				<p class="no-posts-text unselectable">No posts yet</p>
 			</div>
@@ -168,34 +212,37 @@ export default {
 	display: flex;
 	flex-direction: row;
 	align-items: flex-start;
-	justify-content: flex-end; 
+	justify-content: flex-end;
 	width: calc(100% - 300px);
-	margin-left: 300px; /*sidebar*/
+	margin-left: 300px;
 }
 
 .photos-grid {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: flex-start;
-	margin-top: 20px;	
+	margin-top: 20px;
 	width: auto;
 	flex-grow: 1;
 }
 
 .photo-card {
-	width: calc(33.333% - 20px); /* three photos per row, accounting for margin */
+	width: calc(33.333% - 20px);
+	/* three photos per row, accounting for margin */
 	margin: 10px;
 	background: #fff;
 	border-radius: 15px;
 	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-	overflow: hidden; /* Keeps the image within the borders */
-	
+	overflow: hidden;
+	/* Keeps the image within the borders */
+
 }
 
 .photo-img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover; /* Makes images cover the card area without distorting aspect ratio */
+	object-fit: cover;
+	/* Makes images cover the card area without distorting aspect ratio */
 }
 
 .no-posts-container {
@@ -206,12 +253,12 @@ export default {
 	top: 475px;
 	right: 35px;
 	width: 100%;
-	
+
 }
 
 .bi-camera {
-	fill: #666; 
-	width: 50px; 
+	fill: #666;
+	width: 50px;
 	height: 50px;
 }
 
