@@ -5,6 +5,7 @@ export default {
 	data: function () {
 		return {
 			isEditingUsername: false,
+			usernameWasModified: false,
 			isMyProfile: false,
 			errormsg: null,
 			loading: false,
@@ -77,8 +78,11 @@ export default {
 					console.error('Errore nel recupero dei dati del profilo:', error);
 				}
 			}
-			if (this.$route.params.username != this.username) {
+			if (this.$route.params.username != this.username && !this.usernameWasModified) {
 				window.location.reload();
+			}
+			else if (this.usernameWasModified) {
+				this.usernameWasModified = false;
 			}
 		},
 
@@ -89,8 +93,15 @@ export default {
 		},
 
 		handleRouteChange() {
-			this.checkIfOwnProfile();
-			this.loadProfileData();
+			console.log("Username modified: ", this.usernameWasModified);
+			if (!this.usernameWasModified){
+				this.checkIfOwnProfile();
+				this.loadProfileData();
+				console.log("OK")
+			}
+			else {
+				this.usernameWasModified = false;
+			}
 		},
 
 		enableEditing() {
@@ -123,7 +134,8 @@ export default {
 				});
 				this.isEditingUsername = false;
 				this.loadProfileData();
-				this.errormsg = null; // Reset dell'errore
+				this.errormsg = null;
+				this.usernameWasModified = true;
 			} catch (error) {
 				console.error('Errore nel salvare il nuovo username:', error);
 				this.errormsg = error.response && error.response.data.message ? error.response.data.message : 'Username not valid';
@@ -146,37 +158,46 @@ export default {
 		<!-- Profile area -->
 		<main class="profile-area">
 
-			<!-- Photos area -->
-			<div class="photos-grid" v-if="userProfile.uploadedPhotosCount > 0">
-				<div v-for="photo in this.userProfile.uploadedPhotos" :key="photo.photoID" class="photo-card">
-					<img :src="'data:image/jpeg;base64,' + photo.imageData" class="photo-img">
-				</div>
-			</div>
-
 			<!-- User card -->
 			<div class="profile-card">
 				<div class="profile-photo"></div>
 				<div class="profile-info">
-					<h2 class="username" v-if="!isEditingUsername">{{ userProfile.username }}
-						<button v-if="isMyProfile" class="edit-icon-button" @click="enableEditing">
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-								class="bi bi-pencil-fill" viewBox="0 0 16 16">
-								<path
-									d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z" />
-							</svg>
-						</button>
-					</h2>
-					<input v-else type="text" v-model="userProfile.username" class="username-input" required
-						autocomplete="username" @input="handleUsernameInput">
-					<button v-if="isEditingUsername" class="save-button" @click="setMyUserName">Save</button>
-					<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+					<div class="username-section">
+						<h2 class="username" v-if="!isEditingUsername">{{ userProfile.username }}
+							<button v-if="isMyProfile" class="edit-icon-button" @click="enableEditing">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+									class="bi bi-pencil-fill" viewBox="0 0 16 16">
+									<path
+										d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z" />
+								</svg>
+							</button>
+						</h2>
+						<input v-else type="text" v-model="userProfile.username" class="username-input" @input="handleUsernameInput">
+						<button v-if="isEditingUsername" class="save-button" @click="setMyUserName">Save</button>
+						<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+					</div>
 
-					<p class="info"><span class="info-label">Followers:</span> <span class="info-value">{{
-				userProfile.followersCount }}</span></p>
-					<p class="info"><span class="info-label">Following:</span> <span class="info-value">{{
-				userProfile.followingCount }}</span></p>
-					<p class="info"><span class="info-label">Post:</span> <span class="info-value">{{
-				userProfile.uploadedPhotosCount }}</span></p>
+					<div class="profile-stats">
+						<p class="info">
+							<span class="info-label">Followers:</span>
+							<span class="info-value">{{ userProfile.followersCount }}</span>
+						</p>
+						<p class="info">
+							<span class="info-label">Following:</span>
+							<span class="info-value">{{ userProfile.followingCount }}</span>
+						</p>
+						<p class="info">
+							<span class="info-label">Post:</span>
+							<span class="info-value">{{ userProfile.uploadedPhotosCount }}</span>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Photos area -->
+			<div class="photos-grid" v-if="userProfile.uploadedPhotosCount > 0">
+				<div v-for="photo in this.userProfile.uploadedPhotos" :key="photo.photoID" class="photo-card">
+					<img :src="'data:image/jpeg;base64,' + photo.imageData" class="photo-img">
 				</div>
 			</div>
 
@@ -195,6 +216,7 @@ export default {
 </template>
 
 <style>
+
 .header {
 	background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);
 	height: 70px;
@@ -210,49 +232,155 @@ export default {
 
 .profile-area {
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
+	align-items: center;
+	width: calc(100%-280px);
+	margin-left: 280px;
+}
+
+.profile-card {
+	display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    width: 90%;
+    margin: 20px auto;
+    height: auto;
+}
+
+.profile-photo {
+	width: 160px;
+	height: 160px;
+	background: #ddd;
+	border-radius: 50%;
+	margin-right: 30px;
+}
+
+.profile-info {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
 	align-items: flex-start;
-	justify-content: flex-end;
-	width: calc(100% - 300px);
-	margin-left: 300px;
+}
+
+.username-section {
+	display: flex;
+	width: 100%;
+	text-align: center;
+}
+
+.username {
+	font-size: 36px;
+	font-weight: bold;
+	margin-bottom: 20px;
+}
+
+.username-input {
+	border: 2px solid #ccc;
+	border-radius: 10px;
+	padding: 8px 15px;
+	width: auto;
+	margin-bottom: 30px;
+	margin-right: 3px;
+}
+
+.save-button {
+	background: #446ca0;
+	color: white;
+	border: none;
+	border-radius: 10px;
+	padding: 8px 15px;
+	cursor: pointer;
+	font-weight: bold;
+	margin-left: 10px;
+	width: auto;
+	height: 40px;
+}
+
+.save-button:hover {
+	background: #365880;
+}
+
+.edit-icon-button {
+	margin-left: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.edit-icon-button:hover {
+	background: none;
+}
+
+.edit-icon-button svg {
+	vertical-align: middle;
+}
+
+.edit-icon-button:hover svg {
+	transform: scale(1.2);
+	transition: fill 0.3s ease-in-out;
+}
+
+.profile-stats {
+	display: flex;
+	justify-content: space-around;
+	width: 100%;
+	margin-top: 10px;
+	margin-left: 2px;
+}
+
+.info {
+	display: flex;
+    width: 100%;
+    font-size: 16px;
+	margin: 5px 0;
+}
+
+.info-label {
+	font-weight: bold;
+	color: #444;
+}
+
+.info-value {
+	margin-left: 5px;
 }
 
 .photos-grid {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: flex-start;
+	gap: 20px;
 	margin-top: 20px;
-	width: auto;
-	flex-grow: 1;
+	width: 1300px;
+	
 }
 
 .photo-card {
-	width: calc(33.333% - 20px);
-	/* three photos per row, accounting for margin */
-	margin: 10px;
+	width: 380px;;	/* three photos per row, accounting for margin */
+	height: 380px;
+	margin: 20px;
 	background: #fff;
 	border-radius: 15px;
-	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-	overflow: hidden;
-	/* Keeps the image within the borders */
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+	overflow: hidden;	/* Keeps the image within the borders */
+	position: relative; 
 
 }
 
 .photo-img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
-	/* Makes images cover the card area without distorting aspect ratio */
+	object-fit: cover;	/* Makes images cover the card area without distorting aspect ratio */
+	position: absolute;
 }
 
 .no-posts-container {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	position: fixed;
-	top: 475px;
-	right: 35px;
-	width: 100%;
+	margin-top: 225px;
 
 }
 
@@ -268,99 +396,8 @@ export default {
 	margin-top: 5px;
 }
 
-.profile-card {
-	/*margin-left: auto;*/
-	margin-left: 30px;
-	margin-right: 15px;
-	margin-top: 15px;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	background: #fff;
-	border-radius: 15px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-	padding: 20px;
-	/*width: 340px;*/
-	width: 25%;
-}
-
 .unselectable {
 	user-select: none;
 }
 
-.profile-photo {
-	width: 300px;
-	height: 300px;
-	background: #ddd;
-	/* Placeholder, replace with image */
-	border-radius: 50%;
-	margin-bottom: 20px;
-}
-
-.profile-info {
-	text-align: center;
-}
-
-.username {
-	font-size: 36px;
-	font-weight: bold;
-	margin-bottom: 30px;
-}
-
-.username-input {
-	border: 2px solid #ccc;
-	border-radius: 10px;
-	padding: 8px;
-	width: 70%;
-	margin-bottom: 10px;
-	margin-right: 3px;
-}
-
-.save-button {
-	background: #446ca0;
-	color: white;
-	border: none;
-	border-radius: 10px;
-	padding: 10px 20px;
-	cursor: pointer;
-	font-weight: bold;
-}
-
-.save-button:hover {
-	background: #365880;
-}
-
-.edit-icon-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	padding: 0;
-	display: inline;
-}
-
-.edit-icon-button:hover {
-	background: none;
-}
-
-.edit-icon-button svg {
-	vertical-align: middle;
-}
-
-.edit-icon-button:hover svg {
-	transform: scale(1.1);
-	transition: fill 0.3s ease-in-out;
-}
-
-
-.info {
-	margin: 10px 0;
-}
-
-.info-label {
-	font-weight: bold;
-}
-
-.info-value {
-	margin-left: 5px;
-}
 </style>

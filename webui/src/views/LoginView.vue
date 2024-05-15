@@ -79,7 +79,7 @@ export default {
         <form @submit.prevent="login">
           <div class="form-group">
             <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" id="username" v-model="username" required autocomplete="username"
+            <input type="text" class="form-control" id="username" v-model="username" required autocomplete="off"
               @input="handleUsernameInput">
             <div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
           </div>
