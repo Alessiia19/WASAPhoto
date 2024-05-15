@@ -90,7 +90,7 @@ export default {
 					<div class="search-container" @click.stop>
 						<input v-model="searchQuery" type="text" class="form-control custom"
 							:class="{ 'top-rounded': users.length, 'all-rounded': !users.length }" placeholder="Search"
-							aria-label="Search" name="searchbar" @click.stop>
+							aria-label="Search" name="searchbar" autocomplete="off" @click.stop>
 						<ul v-if="users.length" class="search-dropdown pl-3">
 							<li v-for="user in users" :key="user.userID" @click="goToUserProfile(user)">
 								{{ user.username }}

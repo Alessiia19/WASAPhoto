@@ -13,7 +13,7 @@
 		
 		methods: {
 
-			async navigateTo(path) {
+			navigateTo(path) {
 				const username = localStorage.getItem('username');
 				if (!username) {
 					console.error('Username non trovato nel localStorage');
