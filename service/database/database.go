@@ -110,9 +110,9 @@ func createTables(db *sql.DB) error {
 		return fmt.Errorf("error creating users structure: %w", err)
 	}
 
-	// VEDI SE TOGLIERE IMAGEDATA
 	photosQuery := `CREATE TABLE IF NOT EXISTS photos (photoid INTEGER PRIMARY KEY AUTOINCREMENT,
 					userid INTEGER,
+					username TEXT,
 					imageData BLOB,
 					uploadDate DATETIME,
 					likesCount INTEGER,

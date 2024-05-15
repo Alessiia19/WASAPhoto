@@ -10,7 +10,7 @@ import (
 func (db *appdbimpl) CreatePhoto(p Photo) (Photo, error) {
 
 	// Esegui l'inserimento della nuova foto nel database.
-	result, err := db.c.Exec("INSERT INTO photos (userid, imageData, uploadDate, likesCount, commentsCount) VALUES (?, ?, ?, ?, ?)", p.UserID, p.ImageData, p.UploadDate, p.LikesCount, p.CommentsCount)
+	result, err := db.c.Exec("INSERT INTO photos (userid, username, imageData, uploadDate, likesCount, commentsCount) VALUES (?, ?, ?, ?, ?, ?)", p.UserID, p.Username, p.ImageData, p.UploadDate, p.LikesCount, p.CommentsCount)
 	if err != nil {
 		return p, fmt.Errorf("error creating photo in database: %w", err)
 	}

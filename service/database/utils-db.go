@@ -87,7 +87,7 @@ func (db *appdbimpl) GetFollowing(userID int) ([]User, error) {
 func (db *appdbimpl) GetUploadedPhotos(userID int) ([]Photo, error) {
 	var uploadedPhotos []Photo
 
-	rows, err := db.c.Query("SELECT photoid, userid, imageData, uploadDate, likesCount, commentsCount FROM photos WHERE userid = ? ORDER BY uploadDate DESC", userID)
+	rows, err := db.c.Query("SELECT photoid, userid, username, imageData, uploadDate, likesCount, commentsCount FROM photos WHERE userid = ? ORDER BY uploadDate DESC", userID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching uploaded photos: %w", err)
 	}
@@ -95,7 +95,7 @@ func (db *appdbimpl) GetUploadedPhotos(userID int) ([]Photo, error) {
 
 	for rows.Next() {
 		var photo Photo
-		if err := rows.Scan(&photo.PhotoID, &photo.UserID, &photo.ImageData, &photo.UploadDate, &photo.LikesCount, &photo.CommentsCount); err != nil {
+		if err := rows.Scan(&photo.PhotoID, &photo.UserID, &photo.Username, &photo.ImageData, &photo.UploadDate, &photo.LikesCount, &photo.CommentsCount); err != nil {
 			return nil, fmt.Errorf("error scanning uploaded photo row: %w", err)
 		}
 		uploadedPhotos = append(uploadedPhotos, photo)

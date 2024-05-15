@@ -30,6 +30,7 @@ func (u *User) UserToDatabase() database.User {
 type Photo struct {
 	UserID        int       `json:"userID"`
 	PhotoID       int       `json:"photoID"`
+	Username      string    `json:"username"`
 	ImageData     []byte    `json:"imageData"`
 	UploadDate    time.Time `json:"uploadDate"`
 	LikesCount    int       `json:"likesCount"`
@@ -39,6 +40,7 @@ type Photo struct {
 func (p *Photo) PhotoFromDatabase(photo database.Photo) {
 	p.PhotoID = photo.PhotoID
 	p.UserID = photo.UserID
+	p.Username = photo.Username
 	p.ImageData = photo.ImageData
 	p.UploadDate = photo.UploadDate
 	p.LikesCount = photo.LikesCount
@@ -49,6 +51,7 @@ func (p *Photo) PhotoToDatabase() database.Photo {
 	return database.Photo{
 		PhotoID:       p.PhotoID,
 		UserID:        p.UserID,
+		Username:      p.Username,
 		ImageData:     p.ImageData,
 		UploadDate:    p.UploadDate,
 		LikesCount:    p.LikesCount,
