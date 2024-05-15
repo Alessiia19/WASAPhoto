@@ -88,7 +88,6 @@ export default {
 		},
 
 		async loadProfileData() {
-			console.log("Inizio caricamento dati profilo, isMyProfile:", this.isMyProfile);
 			if (this.isMyProfile) {
 				try {
 					let response = await this.$axios.get('/users/' + this.userID, {
@@ -115,12 +114,9 @@ export default {
 					});
 					this.userProfile = response.data;
 					this.username = response.data.username;
-					console.log(this.userID)
-					console.log(this.userProfile)
 					if (this.userProfile.followers){
 						this.isFollowed = this.userProfile.followers.some(follower => follower.userID === parseInt(this.userID));
-					}
-					console.log(this.isFollowed)
+					}	
 					this.$router.push({ path: '/users/' + this.$route.params.username })
 
 				} catch (error) {

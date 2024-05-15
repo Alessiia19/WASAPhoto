@@ -10,6 +10,16 @@ export default {
 			username: localStorage.getItem('username'),
 			searchQuery: "",
 			users: [],
+			photos: [
+				{
+					photoID: 0,
+					authorID: 0,
+					imageData: '',
+					uploadDate: '',
+					likesCount: 0,
+					commentsCount: 0,
+				}
+			],
 		}
 	},
 
@@ -26,6 +36,35 @@ export default {
 			this.loading = false;
 		},
 
+		async clearSearch() {
+			this.searchQuery = '';
+			this.users = [];
+		},
+
+		async goToUserProfile(userToSearch) {
+			if (userToSearch) {
+				localStorage.setItem("userToSearchID", userToSearch.userID)
+				this.$router.push({ path: `/users/${userToSearch.username}` });
+			} else {
+				console.error('Errore: Nome utente non fornito.');
+			}
+		},
+
+		async loadStreamData() {
+			try {
+				let response = await this.$axios.get('/users/' + this.userID + '/stream', {
+					headers: {
+						Authorization: "Bearer " + this.userID
+					}
+				});
+				this.photos = response.data;
+				console.log(this.photos);
+
+			} catch (error) {
+				console.error('Error while retrieving user stream: ', error);
+			}
+		},
+
 		async searchUsers() {
 			if (!this.searchQuery.trim()) {
 				this.users = [];
@@ -40,22 +79,10 @@ export default {
 			}
 		},
 
-		goToUserProfile(userToSearch) {
-			if (userToSearch) {
-				localStorage.setItem("userToSearchID", userToSearch.userID)
-				this.$router.push({ path: `/users/${userToSearch.username}` });
-			} else {
-				console.error('Errore: Nome utente non fornito.');
-			}
-		},
-
-		clearSearch() {
-			this.searchQuery = '';
-			this.users = [];
-		},
 	},
 
 	mounted() {
+		this.loadStreamData();
 		document.addEventListener('click', (event) => {
 			if (!this.$el.contains(event.target)) {
 				this.clearSearch();
