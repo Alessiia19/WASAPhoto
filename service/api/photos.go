@@ -48,8 +48,17 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	// Ottieni l'username
+	user, err := rt.db.GetUserDetails(userID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("uploadPhoto: error retrieving user details")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// Aggiorna i dati della foto
 	photo.UserID = userID
+	photo.Username = user.Username
 	photo.UploadDate = time.Now()
 	photo.LikesCount = 0
 	photo.CommentsCount = 0

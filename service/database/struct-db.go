@@ -14,6 +14,7 @@ type User struct {
 type Photo struct {
 	UserID        int       `json:"userID"`
 	PhotoID       int       `json:"photoID"`
+	Username      string    `json:"username"`
 	ImageData     []byte    `json:"imageData"`
 	UploadDate    time.Time `json:"uploadDate"`
 	LikesCount    int       `json:"likesCount"`
