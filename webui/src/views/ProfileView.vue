@@ -7,6 +7,7 @@ export default {
 			isEditingUsername: false,
 			usernameWasModified: false,
 			isMyProfile: false,
+			isFollowed: false,
 			errormsg: null,
 			loading: false,
 			userID: localStorage.getItem('userID'),
@@ -14,6 +15,8 @@ export default {
 			userToSearchID: localStorage.getItem('userToSearchID'),
 			userProfile: {
 				username: '',
+				followers: [],
+				following: [],
 				followersCount: 0,
 				followingCount: 0,
 				uploadedPhotos: [
@@ -44,6 +47,46 @@ export default {
 
 	methods: {
 
+		async checkIfOwnProfile() {
+			const routeUsername = this.$route.params.username;
+			this.isMyProfile = (routeUsername === this.username);
+
+		},
+
+		enableEditing() {
+			this.isEditingUsername = true;
+		},
+
+		async followUser() {
+			try {
+				let response = await this.$axios.post('/users/' + this.userID + '/following', { userid: parseInt(this.userToSearchID) }, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.isFollowed = true;
+				console.log("Following user:", this.userToSearchID);
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error while attempting to follow:', error);
+			}
+		},
+
+		async handleRouteChange() {
+			console.log("Username modified: ", this.usernameWasModified);
+			if (!this.usernameWasModified) {
+				this.checkIfOwnProfile();
+				this.loadProfileData();
+				console.log("OK")
+			}
+			else {
+				this.usernameWasModified = false;
+			}
+		},
+
+		handleUsernameInput() {
+			// Chiamata alla funzione di validazione durante ogni inserimento
+			this.validateUsername();
+		},
+
 		async loadProfileData() {
 			console.log("Inizio caricamento dati profilo, isMyProfile:", this.isMyProfile);
 			if (this.isMyProfile) {
@@ -72,6 +115,12 @@ export default {
 					});
 					this.userProfile = response.data;
 					this.username = response.data.username;
+					console.log(this.userID)
+					console.log(this.userProfile)
+					if (this.userProfile.followers){
+						this.isFollowed = this.userProfile.followers.some(follower => follower.userID === parseInt(this.userID));
+					}
+					console.log(this.isFollowed)
 					this.$router.push({ path: '/users/' + this.$route.params.username })
 
 				} catch (error) {
@@ -83,47 +132,6 @@ export default {
 			}
 			else if (this.usernameWasModified) {
 				this.usernameWasModified = false;
-			}
-		},
-
-		async checkIfOwnProfile() {
-			const routeUsername = this.$route.params.username;
-			this.isMyProfile = (routeUsername === this.username);
-
-		},
-
-		handleRouteChange() {
-			console.log("Username modified: ", this.usernameWasModified);
-			if (!this.usernameWasModified){
-				this.checkIfOwnProfile();
-				this.loadProfileData();
-				console.log("OK")
-			}
-			else {
-				this.usernameWasModified = false;
-			}
-		},
-
-		enableEditing() {
-			this.isEditingUsername = true;
-		},
-
-		handleUsernameInput() {
-			// Chiamata alla funzione di validazione durante ogni inserimento
-			this.validateUsername();
-		},
-
-		validateUsername() {
-			const usernameRegex = /^[a-zA-Z0-9]+$/;
-			if (!usernameRegex.test(this.userProfile.username.trim())) {
-				this.errormsg = "L'username deve contenere solo lettere e numeri.";
-				return false;
-			} else if (this.userProfile.username.length < 3 || this.userProfile.username.length > 16) {
-				this.errormsg = "L'username deve essere compreso tra 3 e 16 caratteri.";
-				return false;
-			} else {
-				this.errormsg = null; // Resetta il messaggio di errore se la validazione ha successo
-				return true;
 			}
 		},
 
@@ -142,6 +150,34 @@ export default {
 			}
 
 		},
+
+		async unfollowUser() {
+			try {
+				let response = await this.$axios.delete('/users/' + this.userID + '/following/' + parseInt(this.userToSearchID), {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.isFollowed = false;
+				console.log("Unfollowing user:", this.userToSearchID);
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error while attempting to unfollow:', error);
+			}
+		},
+
+		validateUsername() {
+			const usernameRegex = /^[a-zA-Z0-9]+$/;
+			if (!usernameRegex.test(this.userProfile.username.trim())) {
+				this.errormsg = "L'username deve contenere solo lettere e numeri.";
+				return false;
+			} else if (this.userProfile.username.length < 3 || this.userProfile.username.length > 16) {
+				this.errormsg = "L'username deve essere compreso tra 3 e 16 caratteri.";
+				return false;
+			} else {
+				this.errormsg = null; // Resetta il messaggio di errore se la validazione ha successo
+				return true;
+			}
+		},
+
 	},
 
 }
@@ -172,9 +208,16 @@ export default {
 								</svg>
 							</button>
 						</h2>
-						<input v-else type="text" v-model="userProfile.username" class="username-input" @input="handleUsernameInput">
+						<input v-else type="text" v-model="userProfile.username" class="username-input"
+							@input="handleUsernameInput">
 						<button v-if="isEditingUsername" class="save-button" @click="setMyUserName">Save</button>
 						<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+
+						<!-- Follow Button -->
+						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser">+ Follow</button>
+
+						<!-- Unfollow Button -->
+						<button v-if="!isMyProfile && isFollowed" class="unfollow-button" @click="unfollowUser">Unfollow</button>
 					</div>
 
 					<div class="profile-stats">
@@ -216,7 +259,6 @@ export default {
 </template>
 
 <style>
-
 .header {
 	background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);
 	height: 70px;
@@ -230,6 +272,67 @@ export default {
 	margin-top: 7px;
 }
 
+
+.bi-camera {
+	fill: #666;
+	width: 50px;
+	height: 50px;
+}
+
+.edit-icon-button {
+	margin-left: 10px;
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+.edit-icon-button:hover {
+	background: none;
+}
+
+.edit-icon-button:hover svg {
+	transform: scale(1.2);
+	transition: fill 0.3s ease-in-out;
+}
+
+.edit-icon-button svg {
+	vertical-align: middle;
+}
+
+.follow-button {
+	top: 20px;
+	right: 20px;
+	background: #446ca0;
+	color: white;
+	border: none;
+	border-radius: 10px;
+	padding: 8px 15px;
+	cursor: pointer;
+	font-weight: bold;
+	height: 40px;
+	margin-left: 20px;
+}
+
+.follow-button:hover {
+	background: #365880;
+}
+
+.info {
+	display: flex;
+	width: 100%;
+	font-size: 16px;
+	margin: 5px 0;
+}
+
+.info-label {
+	font-weight: bold;
+	color: #444;
+}
+
+.info-value {
+	margin-left: 5px;
+}
+
 .profile-area {
 	display: flex;
 	flex-direction: column;
@@ -240,14 +343,21 @@ export default {
 
 .profile-card {
 	display: flex;
-    align-items: center;
-    background: #fff;
-    border-radius: 15px;
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    width: 90%;
-    margin: 20px auto;
-    height: auto;
+	align-items: center;
+	background: #fff;
+	border-radius: 15px;
+	box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.2);
+	padding: 20px;
+	width: 90%;
+	margin: 20px auto;
+	height: auto;
+}
+
+.profile-info {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	align-items: flex-start;
 }
 
 .profile-photo {
@@ -258,32 +368,60 @@ export default {
 	margin-right: 30px;
 }
 
-.profile-info {
+.profile-stats {
+	display: flex;
+	justify-content: space-around;
+	width: 100%;
+	margin-top: 10px;
+	margin-left: 2px;
+}
+
+.photo-card {
+	width: 380px;
+	height: 380px;
+	margin: 20px;
+	background: #fff;
+	border-radius: 15px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+	overflow: hidden;
+	position: relative;
+	
+}
+
+.photo-card:hover {
+	transform: scale(1.05);
+	transition: fill 0.05s ease-in-out;	
+}
+
+.photo-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	/* Makes images cover the card area without distorting aspect ratio */
+	position: absolute;
+}
+
+.photos-grid {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	gap: 20px;
+	margin-top: 20px;
+	width: 1300px;
+
+}
+
+.no-posts-container {
 	display: flex;
 	flex-direction: column;
-	flex-grow: 1;
-	align-items: flex-start;
+	align-items: center;
+	margin-top: 225px;
 }
 
-.username-section {
-	display: flex;
-	width: 100%;
-	text-align: center;
-}
-
-.username {
-	font-size: 36px;
-	font-weight: bold;
-	margin-bottom: 20px;
-}
-
-.username-input {
-	border: 2px solid #ccc;
-	border-radius: 10px;
-	padding: 8px 15px;
-	width: auto;
-	margin-bottom: 30px;
-	margin-right: 3px;
+.no-posts-text {
+	font-size: 20px;
+	color: #666;
+	margin-top: 5px;
 }
 
 .save-button {
@@ -303,101 +441,47 @@ export default {
 	background: #365880;
 }
 
-.edit-icon-button {
-	margin-left: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.edit-icon-button:hover {
-	background: none;
-}
-
-.edit-icon-button svg {
-	vertical-align: middle;
-}
-
-.edit-icon-button:hover svg {
-	transform: scale(1.2);
-	transition: fill 0.3s ease-in-out;
-}
-
-.profile-stats {
-	display: flex;
-	justify-content: space-around;
-	width: 100%;
-	margin-top: 10px;
-	margin-left: 2px;
-}
-
-.info {
-	display: flex;
-    width: 100%;
-    font-size: 16px;
-	margin: 5px 0;
-}
-
-.info-label {
+.unfollow-button {
+	top: 20px;
+	right: 20px;
+	background: #df0c41;
+	color: white;
+	border: none;
+	border-radius: 10px;
+	padding: 8px 15px;
+	cursor: pointer;
 	font-weight: bold;
-	color: #444;
+	height: 40px;
+	margin-left: 20px;
 }
 
-.info-value {
-	margin-left: 5px;
-}
-
-.photos-grid {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	gap: 20px;
-	margin-top: 20px;
-	width: 1300px;
-	
-}
-
-.photo-card {
-	width: 380px;;	/* three photos per row, accounting for margin */
-	height: 380px;
-	margin: 20px;
-	background: #fff;
-	border-radius: 15px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-	overflow: hidden;	/* Keeps the image within the borders */
-	position: relative; 
-
-}
-
-.photo-img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;	/* Makes images cover the card area without distorting aspect ratio */
-	position: absolute;
-}
-
-.no-posts-container {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	margin-top: 225px;
-
-}
-
-.bi-camera {
-	fill: #666;
-	width: 50px;
-	height: 50px;
-}
-
-.no-posts-text {
-	font-size: 20px;
-	color: #666;
-	margin-top: 5px;
+.unfollow-button:hover {
+	background: #cf0a0a;
 }
 
 .unselectable {
 	user-select: none;
+}
+
+.username {
+	font-size: 36px;
+	font-weight: bold;
+	margin-bottom: 20px;
+}
+
+.username-input {
+	border: 2px solid #ccc;
+	border-radius: 10px;
+	padding: 8px 15px;
+	width: auto;
+	margin-bottom: 30px;
+	margin-right: 3px;
+}
+
+.username-section {
+	display: flex;
+	width: 100%;
+	text-align: center;
 }
 
 </style>

@@ -27,8 +27,7 @@ export default {
 
 
         // Metodo per gestire il caricamento del file selezionato
-        handleFileUpload(event) {
-            //this.image = event.target.files[0];
+        handleFileUpload() {
             this.image = this.$refs.file.files[0];
             this.previewImage = URL.createObjectURL(this.image);
             this.errormsg = null;
@@ -39,14 +38,11 @@ export default {
         // Metodo per effettuare il caricamento effettivo del file
         async uploadPhoto() {
             if (!this.image) {
-                //alert("Please select a photo to upload.");
                 this.errormsg = "Please select a photo to upload";
                 return;
             }
             try {
                 this.loading = true;
-                //const formData = new FormData();
-                //formData.append('photo', this.image);
                 const userID = localStorage.getItem('userID');
 
                 let response = await this.$axios.post("/users/" + userID + "/photos" , this.image, {
@@ -60,11 +56,9 @@ export default {
 
             } catch (error) {
                 console.error('Error uploading file:', error);
-                //alert("An error occurred while uploading the file:" + error.response.data);
                 this.errormsg = "Unsupported image format. Please upload a PNG or JPG file";
             } finally {
                 this.loading = false;
-                //this.image = null;
                 this.previewImage = null;
             }
         }
@@ -128,7 +122,8 @@ export default {
 }
 
 .preview-photo-card {
-	width: calc(33.333% - 20px); /* three photos per row, accounting for margin */
+	width: 380px;
+    height: 380px;
 	margin: 10px;
 	background: #fff;
 	border-radius: 15px;

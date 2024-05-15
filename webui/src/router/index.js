@@ -25,7 +25,7 @@ const router = createRouter({
 			name: 'home',
 			component: HomeView 	// Home screen
 		}, 
-		{	path: '/link1',
+		{	path: '/users/:username/photos',
 			name: 'uploadPhoto',
 			component: UploadPhotoView	// Screen where you can upload a new photo
 		},
