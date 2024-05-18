@@ -59,15 +59,27 @@ func (p *Photo) PhotoToDatabase() database.Photo {
 	}
 }
 
+type CompletePhoto struct {
+	UserID        int       `json:"userID"`
+	PhotoID       int       `json:"photoID"`
+	Username      string    `json:"username"`
+	ImageData     []byte    `json:"imageData"`
+	UploadDate    time.Time `json:"uploadDate"`
+	LikesCount    int       `json:"likesCount"`
+	Likes         []Like    `json:"likes"`
+	CommentsCount int       `json:"commentsCount"`
+	Comments      []Comment `json:"comments"`
+}
+
 type Profile struct {
-	UserID              int     `json:"userID"`              // User's identifier
-	Username            string  `json:"username"`            // User's username
-	Followers           []User  `json:"followers"`           // followers list
-	Following           []User  `json:"following"`           // following list
-	FollowersCount      int     `json:"followersCount"`      // followers number
-	FollowingCount      int     `json:"followingCount"`      // following number
-	UploadedPhotos      []Photo `json:"uploadedPhotos"`      // Photos array
-	UploadedPhotosCount int     `json:"uploadedPhotosCount"` // Uploaded photos number
+	UserID              int             `json:"userID"`              // User's identifier
+	Username            string          `json:"username"`            // User's username
+	Followers           []User          `json:"followers"`           // followers list
+	Following           []User          `json:"following"`           // following list
+	FollowersCount      int             `json:"followersCount"`      // followers number
+	FollowingCount      int             `json:"followingCount"`      // following number
+	UploadedPhotos      []CompletePhoto `json:"uploadedPhotos"`      // Photos array
+	UploadedPhotosCount int             `json:"uploadedPhotosCount"` // Uploaded photos number
 }
 
 type Like struct {

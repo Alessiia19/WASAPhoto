@@ -83,9 +83,57 @@ func (db *appdbimpl) GetFollowing(userID int) ([]User, error) {
 	return following, nil
 }
 
+// getLikes recupera tutti i likes di una foto specifica.
+func (db *appdbimpl) GetLikes(photoID int) ([]Like, error) {
+	var likes []Like
+	rows, err := db.c.Query("SELECT likeid, userid, photoid FROM likes WHERE photoid = ?", photoID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching likes: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var like Like
+		if err := rows.Scan(&like.LikeID, &like.UserID, &like.PhotoID); err != nil {
+			return nil, fmt.Errorf("error scanning like row: %w", err)
+		}
+		likes = append(likes, like)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over likes rows: %w", err)
+	}
+
+	return likes, nil
+}
+
+// getComments recupera tutti i commenti di una foto specifica.
+func (db *appdbimpl) GetComments(photoID int) ([]Comment, error) {
+	var comments []Comment
+	rows, err := db.c.Query("SELECT commentid, userid, photoid, commentText FROM comments WHERE photoid = ?", photoID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching comments: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var comment Comment
+		if err := rows.Scan(&comment.CommentID, &comment.AuthorID, &comment.PhotoID, &comment.CommentText); err != nil {
+			return nil, fmt.Errorf("error scanning comment row: %w", err)
+		}
+		comments = append(comments, comment)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over comment rows: %w", err)
+	}
+
+	return comments, nil
+}
+
 // getUploadedPhotos ottiene la lista di foto caricate dall'utente specificato.
-func (db *appdbimpl) GetUploadedPhotos(userID int) ([]Photo, error) {
-	var uploadedPhotos []Photo
+func (db *appdbimpl) GetUploadedPhotos(userID int) ([]CompletePhoto, error) {
+	var uploadedPhotos []CompletePhoto
 
 	rows, err := db.c.Query("SELECT photoid, userid, username, imageData, uploadDate, likesCount, commentsCount FROM photos WHERE userid = ? ORDER BY uploadDate DESC", userID)
 	if err != nil {
@@ -94,10 +142,22 @@ func (db *appdbimpl) GetUploadedPhotos(userID int) ([]Photo, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var photo Photo
+		var photo CompletePhoto
 		if err := rows.Scan(&photo.PhotoID, &photo.UserID, &photo.Username, &photo.ImageData, &photo.UploadDate, &photo.LikesCount, &photo.CommentsCount); err != nil {
 			return nil, fmt.Errorf("error scanning uploaded photo row: %w", err)
 		}
+
+		// Fetch likes and comments for each photo
+		photo.Likes, err = db.GetLikes(photo.PhotoID)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching likes for photoID %d: %w", photo.PhotoID, err)
+		}
+
+		photo.Comments, err = db.GetComments(photo.PhotoID)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching comments for photoID %d: %w", photo.PhotoID, err)
+		}
+
 		uploadedPhotos = append(uploadedPhotos, photo)
 	}
 

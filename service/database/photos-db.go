@@ -58,13 +58,14 @@ func (db *appdbimpl) LikePhoto(userID int, photoID int, l Like) error {
 	// Verifica se l'utente che ha pubblicato la foto ha bannato l'utente corrente.
 	var isBanned int
 	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, photoAuthorID).Scan(&isBanned)
-	if err != nil {
-		return fmt.Errorf("error checking if user is banned: %w", err)
+	if err == nil {
+		return fmt.Errorf("cannot like a photo published by a user who has banned you")
 	}
 
-	if isBanned == 1 {
-		return errors.New("cannot like a photo published by a user who has banned you")
-	}
+	/*
+		if isBanned == 1 {
+			return errors.New("cannot like a photo published by a user who has banned you")
+		}*/
 
 	// Incrementa il numero di likes della foto.
 	_, err = db.c.Exec("UPDATE photos SET likesCount = likesCount + 1 WHERE photoid = ?", photoID)

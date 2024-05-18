@@ -51,7 +51,7 @@ type AppDatabase interface {
 	UncommentPhoto(int, int, int) error
 	DeletePhoto(int, int) error
 	GetUserProfile(int, int) (Profile, error)
-	GetMyStream(int) ([]Photo, error)
+	GetMyStream(int) ([]CompletePhoto, error)
 	GetUsers(string) ([]User, error)
 
 	// utils
@@ -59,7 +59,7 @@ type AppDatabase interface {
 	GetUserDetails(int) (User, error)
 	GetFollowers(int) ([]User, error)
 	GetFollowing(int) ([]User, error)
-	GetUploadedPhotos(int) ([]Photo, error)
+	GetUploadedPhotos(int) ([]CompletePhoto, error)
 
 	Ping() error
 }
