@@ -69,7 +69,7 @@ export default {
 <template>
   <div class="login-container">
     <div class="app-name">
-      <h1 class="app-title">WASAPhoto</h1>
+      <h1 class="app-title unselectable">WASAPhoto</h1>
       <div class="underline"></div>
     </div>
     <div class="login-wrapper">
@@ -198,5 +198,9 @@ export default {
 .btn-primary:hover {
   background-color: #001a33;
   /* Cambio di colore al passaggio del mouse sul bottone */
+}
+
+.unselectable {
+	user-select: none;
 }
 </style>
