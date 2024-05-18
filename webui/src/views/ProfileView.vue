@@ -26,7 +26,9 @@ export default {
 						imageData: '',
 						uploadDate: '',
 						likesCount: 0,
+						likes: [],
 						commentsCount: 0,
+						comments: [],
 					}
 				],
 				uploadedPhotosCount: 0,
@@ -392,8 +394,7 @@ export default {
 .photo-img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
-	/* Makes images cover the card area without distorting aspect ratio */
+	object-fit: cover;	/* Makes images cover the card area without distorting aspect ratio */
 	position: absolute;
 }
 

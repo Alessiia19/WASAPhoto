@@ -26,7 +26,6 @@ export default {
         localStorage.setItem("userID", this.user.userID)
         localStorage.setItem("username", this.user.username)
         localStorage.setItem("userToSearchID", this.userToSearchID)
-        console.log("User loggato:", this.user)
         console.log("Localstorage:", localStorage)
 
         // Redirect alla home dopo il login

@@ -260,14 +260,14 @@ func (db *appdbimpl) GetUserProfile(requestingUserID, requestedUserID int) (Prof
 
 // GetMyStream restituisce lo stream dell'utente, costituito dalle foto pubblicate dai suoi following,
 // comprese di dettagli quali il date-time in cui sono state pubblicate, il numero di like e di commenti.
-func (db *appdbimpl) GetMyStream(userID int) ([]Photo, error) {
+func (db *appdbimpl) GetMyStream(userID int) ([]CompletePhoto, error) {
 	// Ottieni la lista di utenti seguiti dall'utente specificato
 	following, err := db.GetFollowing(userID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting following users: %w", err)
 	}
 
-	var stream []Photo
+	var stream []CompletePhoto
 
 	// Itera su ogni utente seguito per ottenere le foto dallo stream
 	for _, followedUser := range following {

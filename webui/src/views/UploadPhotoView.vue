@@ -44,14 +44,11 @@ export default {
             try {
                 this.loading = true;
                 const userID = localStorage.getItem('userID');
-
                 let response = await this.$axios.post("/users/" + userID + "/photos" , this.image, {
 						headers: {
 							Authorization: "Bearer " + userID
 						}
 					});
-
-                console.log("Photo uploaded successfully. PhotoID:", + response.data.photoID);
                 this.successmsg = "Photo uploaded successfully!"
 
             } catch (error) {
