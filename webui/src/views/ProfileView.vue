@@ -155,7 +155,6 @@ export default {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
 				this.isFollowed = false;
-				console.log("Unfollowing user:", this.userToSearchID);
 				this.loadProfileData();
 			} catch (error) {
 				console.error('Error while attempting to unfollow:', error);

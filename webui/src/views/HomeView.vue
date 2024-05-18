@@ -61,7 +61,6 @@ export default {
 				});
 				photo.isLiked = true;
 				this.loadStreamData();
-				console.log(photo.isLiked)
 			} catch (error) {
 				console.error('Error while attempting to like the photo:', error);
 			}
@@ -102,6 +101,21 @@ export default {
 				this.users = [];
 			}
 		},
+
+		async unlikePhoto(photo) {
+			// Trova il like specifico fatto dall'utente loggato
+			const userLike = photo.likes.find(like => like.userID === parseInt(this.userID));
+			try {
+				let response = await this.$axios.delete('/users/' + this.userID + '/photos/' + photo.photoID + '/likes/' + userLike.likeID, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				photo.isLiked = false;
+				this.loadStreamData();
+			} catch (error) {
+				console.error('Error while attempting to unlike the photo:', error);
+			}
+		}
+
 
 	},
 
@@ -167,7 +181,7 @@ export default {
 							<div class="photo-author">{{ photo.username }}</div>
 							<div class="photo-engagement-stats">
 								<div class="heart-icon">
-									<svg v-if="photo.isLiked" @click="toggleLike(photo)"
+									<svg v-if="photo.isLiked" @click="unlikePhoto(photo)"
 										xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
 										class="bi bi-heart-fill" viewBox="0 0 16 16">
 										<path fill-rule="evenodd"
