@@ -70,7 +70,7 @@ export default {
   <div class="login-container">
     <div class="app-name">
       <h1 class="app-title unselectable">WASAPhoto</h1>
-      <div class="underline"></div>
+      <div class="underline ms-2"></div>
     </div>
     <div class="login-wrapper">
       <div class="login-box">
@@ -112,7 +112,7 @@ export default {
   /* Posizionamento assoluto */
   top: 160px;
   /* Distanza dal top */
-  left: 690px;
+  left: 680px;
   /* Distanza dalla sinistra */
 }
 

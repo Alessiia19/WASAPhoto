@@ -10,6 +10,7 @@ export default {
 			username: localStorage.getItem('username'),
 			searchQuery: "",
 			users: [],
+			newComment: '',
 			photos: [
 				{
 					photoID: 0,
@@ -20,7 +21,16 @@ export default {
 					likesCount: 0,
 					likes: [],
 					commentsCount: 0,
-					comments: [],
+					comments: [
+						{
+							commentID: 0,
+							authorID: 0,
+							authorUsername: '',
+							photoID: 0,
+							commentText: '',
+							uploadDate: '',
+						}
+					],
 					isLiked: false,
 				}
 			],
@@ -82,11 +92,29 @@ export default {
 						}
 					});
 				}
+				console.log(this.photos)
 
 			} catch (error) {
 				console.error('Error while retrieving user stream: ', error);
 			}
 		},
+
+		async postComment(photo) {
+			if (!this.newComment.trim()) {
+				return;
+			}
+			try {
+				// Inviare il nuovo commento al server
+				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: this.newComment }, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.newComment = ''; // Resetta l'input
+				this.loadStreamData();
+			} catch (error) {
+				console.error('Error posting comment:', error);
+			}
+		},
+
 
 		async searchUsers() {
 			if (!this.searchQuery.trim()) {
@@ -179,6 +207,28 @@ export default {
 						<!-- Photo infos -->
 						<div class="stream-photo-info">
 							<div class="photo-author">{{ photo.username }}</div>
+
+							<!-- Comment section -->
+							<div class="photo-comments">
+								<div class="comments-list">
+									<p v-for="comment in photo.comments" :key="comment.commentID" class="comment-text">
+										<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
+									</p>
+								</div>
+								<div class="comment-input-container">
+									<textarea v-model="newComment" placeholder="Add a comment..."
+										class="comment-input"></textarea>
+									<div @click="postComment(photo)" class="send-icon">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
+											<path
+												d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z" />
+										</svg>
+									</div>
+								</div>
+							</div>
+
+
 							<div class="photo-engagement-stats">
 								<div class="heart-icon">
 									<svg v-if="photo.isLiked" @click="unlikePhoto(photo)"
@@ -236,6 +286,33 @@ export default {
 	margin-bottom: 15px;
 }
 
+.comment-input {
+	border-radius: 10px;
+	padding: 10px;
+	padding-right: 50px;
+	width: 100%;
+	border: 1px solid #ccc;
+	resize: none;
+}
+
+.comment-input-container {
+    position: relative;
+	overflow-x: auto;
+}
+
+.comments-list {
+	height: 140px;
+	margin-bottom: 15px;
+	overflow-y: auto;
+	overflow-x: auto;
+}
+
+.comment-text {
+	margin-bottom: 20px;
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+}
+
 .header-home-content {
 	display: flex;
 	align-items: center;
@@ -256,6 +333,13 @@ export default {
 	font-weight: bold;
 	font-size: 18px;
 	width: 100%;
+}
+
+.photo-comments {
+	border-left: 2px solid #e0e0e0;
+	border-right: 2px solid #e0e0e0;
+	display: flex;
+	flex-direction: column;
 }
 
 .photo-engagement-stats {
@@ -312,6 +396,20 @@ export default {
 	background-color: #f5f5f5;
 }
 
+.send-icon {
+	margin-right: 10px;
+	border-radius: 5px;
+	position: absolute;
+    top: 15px;
+    right: 15px; 
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.send-icon:hover {
+	transform: scale(1.2);
+}
+
 .stream-content {
 	display: flex;
 	flex-direction: column;
@@ -336,7 +434,6 @@ export default {
 }
 
 .stream-photo-image-container {
-	flex: 1 1 auto;
 	width: 380px;
 	height: 380px;
 	margin: 15px;
@@ -361,6 +458,11 @@ export default {
 	margin-bottom: 10px;
 }
 
+.stream-photo-info,
+.photo-comments {
+	flex: 1;
+	padding: 10px;
+}
 
 .top-rounded {
 	border-radius: 20px 20px 0px 0px;

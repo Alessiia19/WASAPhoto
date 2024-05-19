@@ -218,7 +218,15 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	newComment, err := rt.db.CommentPhoto(userID, photoID, comment.CommentToDatabase())
+	// Ottieni l'username
+	user, err := rt.db.GetUserDetails(userID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("commentPhoto: error retrieving user details")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	newComment, err := rt.db.CommentPhoto(userID, photoID, user.Username, comment.CommentToDatabase())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ctx.Logger.WithError(err).Error("commentPhoto: Error commenting on photo.")

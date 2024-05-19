@@ -47,7 +47,7 @@ type AppDatabase interface {
 	UnbanUser(int, int) error
 	LikePhoto(int, int, Like) error
 	UnlikePhoto(int, int, int) error
-	CommentPhoto(int, int, Comment) (Comment, error)
+	CommentPhoto(int, int, string, Comment) (Comment, error)
 	UncommentPhoto(int, int, int) error
 	DeletePhoto(int, int) error
 	GetUserProfile(int, int) (Profile, error)
@@ -173,8 +173,9 @@ func createTables(db *sql.DB) error {
 	commentsQuery := `CREATE TABLE IF NOT EXISTS comments (
 		commentid INTEGER PRIMARY KEY AUTOINCREMENT,
 		userid INTEGER,
+		username TEXT,
 		photoid INTEGER,
-		upload_date DATETIME,
+		uploadDate DATETIME,
 		commentText TEXT,
 		FOREIGN KEY(userid) REFERENCES users(userid) ON DELETE CASCADE,
 		FOREIGN KEY(photoid) REFERENCES photos(photoid) ON DELETE CASCADE
