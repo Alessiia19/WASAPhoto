@@ -9,6 +9,18 @@ export default {
 			isMyProfile: false,
 			isFollowed: false,
 			errormsg: null,
+			isPhotoPopupOpen: false,
+			selectedPhoto: {
+				photoID: 0,
+				userID: 0,
+				imageData: '',
+				uploadDate: '',
+				likesCount: 0,
+				likes: [],
+				commentsCount: 0,
+				comments: [],
+				isLiked: false,
+			},
 			loading: false,
 			userID: localStorage.getItem('userID'),
 			username: localStorage.getItem('username'),
@@ -29,6 +41,7 @@ export default {
 						likes: [],
 						commentsCount: 0,
 						comments: [],
+						isLiked: false,
 					}
 				],
 				uploadedPhotosCount: 0,
@@ -55,6 +68,11 @@ export default {
 
 		},
 
+		closePhotoPopup() {
+			this.isPhotoPopupOpen = false;
+			this.selectedPhoto = null;
+		},
+
 		enableEditing() {
 			this.isEditingUsername = true;
 		},
@@ -65,7 +83,6 @@ export default {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
 				this.isFollowed = true;
-				console.log("Following user:", this.userToSearchID);
 				this.loadProfileData();
 			} catch (error) {
 				console.error('Error while attempting to follow:', error);
@@ -73,11 +90,9 @@ export default {
 		},
 
 		async handleRouteChange() {
-			console.log("Username modified: ", this.usernameWasModified);
 			if (!this.usernameWasModified) {
 				this.checkIfOwnProfile();
 				this.loadProfileData();
-				console.log("OK")
 			}
 			else {
 				this.usernameWasModified = false;
@@ -87,6 +102,19 @@ export default {
 		handleUsernameInput() {
 			// Chiamata alla funzione di validazione durante ogni inserimento
 			this.validateUsername();
+		},
+
+		async likePhoto(photo) {
+			try {
+				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/likes', {}, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				photo.isLiked = true;
+				photo.likesCount += 1;
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error while attempting to like the photo:', error);
+			}
 		},
 
 		async loadProfileData() {
@@ -116,9 +144,22 @@ export default {
 					});
 					this.userProfile = response.data;
 					this.username = response.data.username;
-					if (this.userProfile.followers){
+					if (this.userProfile.followers) {
 						this.isFollowed = this.userProfile.followers.some(follower => follower.userID === parseInt(this.userID));
-					}	
+					}
+					if (this.userProfile.uploadedPhotos) {
+						this.userProfile.uploadedPhotos.map(photo => {
+							if (photo.likes) {
+								photo.isLiked = photo.likes.some(like => like.userID === parseInt(this.userID));
+								return photo;
+							}
+						});
+					}
+
+					if (this.selectedPhoto) {
+						this.updateSelectedPhotoLikes(this.selectedPhoto.photoID)
+					}
+
 					this.$router.push({ path: '/users/' + this.$route.params.username })
 
 				} catch (error) {
@@ -131,6 +172,11 @@ export default {
 			else if (this.usernameWasModified) {
 				this.usernameWasModified = false;
 			}
+		},
+
+		openPhotoPopup(photo) {
+			this.selectedPhoto = photo;
+			this.isPhotoPopupOpen = true;
 		},
 
 		async setMyUserName() {
@@ -160,6 +206,31 @@ export default {
 				console.error('Error while attempting to unfollow:', error);
 			}
 		},
+
+		async unlikePhoto(photo) {
+			// Trova il like specifico fatto dall'utente loggato
+			const userLike = photo.likes.find(like => like.userID === parseInt(this.userID));
+			try {
+				let response = await this.$axios.delete('/users/' + this.userID + '/photos/' + photo.photoID + '/likes/' + userLike.likeID, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				photo.isLiked = false;
+				photo.likesCount -= 1;
+				this.loadProfileData();
+
+			} catch (error) {
+				console.error('Error while attempting to unlike the photo:', error);
+			}
+
+		},
+
+		async updateSelectedPhotoLikes(photoID) {
+			const updatedPhoto = this.userProfile.uploadedPhotos.find(p => p.photoID === photoID);
+			if (updatedPhoto) {
+				this.selectedPhoto.likes = updatedPhoto.likes;
+			}
+		},
+
 
 		validateUsername() {
 			const usernameRegex = /^[a-zA-Z0-9]+$/;
@@ -211,10 +282,12 @@ export default {
 						<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
 
 						<!-- Follow Button -->
-						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser">+ Follow</button>
+						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser">+
+							Follow</button>
 
 						<!-- Unfollow Button -->
-						<button v-if="!isMyProfile && isFollowed" class="unfollow-button" @click="unfollowUser">Unfollow</button>
+						<button v-if="!isMyProfile && isFollowed" class="unfollow-button"
+							@click="unfollowUser">Unfollow</button>
 					</div>
 
 					<div class="profile-stats">
@@ -236,7 +309,8 @@ export default {
 
 			<!-- Photos area -->
 			<div class="photos-grid" v-if="userProfile.uploadedPhotosCount > 0">
-				<div v-for="photo in this.userProfile.uploadedPhotos" :key="photo.photoID" class="photo-card">
+				<div v-for="photo in this.userProfile.uploadedPhotos" :key="photo.photoID" class="photo-card"
+					@click="openPhotoPopup(photo)">
 					<img :src="'data:image/jpeg;base64,' + photo.imageData" class="photo-img">
 				</div>
 			</div>
@@ -252,6 +326,41 @@ export default {
 				<p class="no-posts-text unselectable">No posts yet</p>
 			</div>
 		</main>
+
+		<div v-if="isPhotoPopupOpen" class="photo-popup-overlay" @click="closePhotoPopup">
+			<div class="photo-popup-card" @click.stop>
+				<div class="photo-popup-image-container">
+					<img :src="'data:image/jpeg;base64,' + selectedPhoto.imageData"
+						alt="Photo by {{ selectedPhoto.username }}" />
+				</div>
+				<div class="photo-popup-info">
+					<div class="photo-author">{{ selectedPhoto.username }}</div>
+					<div class="photo-engagement-stats">
+						<div v-if="!isMyProfile" class="photo-popup-heart-icon">
+							<svg v-if="selectedPhoto.isLiked" @click="unlikePhoto(selectedPhoto)"
+								xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+								class="bi bi-heart-fill" viewBox="0 0 16 16">
+								<path fill-rule="evenodd"
+									d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314" />
+							</svg>
+							<svg v-else @click="likePhoto(selectedPhoto)" xmlns="http://www.w3.org/2000/svg" width="16"
+								height="16" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
+								<path
+									d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15" />
+							</svg>
+						</div>
+						<div>{{ selectedPhoto.likesCount }} Likes</div>
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+							class="bi bi-chat" viewBox="0 0 16 16">
+							<path
+								d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105" />
+						</svg>
+
+						<div>{{ selectedPhoto.commentsCount }} Comments</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -330,6 +439,65 @@ export default {
 	margin-left: 5px;
 }
 
+.photo-popup-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.8);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.photo-popup-card {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	background: #fff;
+	border-radius: 30px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+	padding: 10px;
+	width: 1000px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 30px;
+	margin-top: 10px;
+}
+
+.photo-popup-heart-icon {
+	margin-top: 5px;
+}
+
+.photo-popup-heart-icon:hover {
+	transform: scale(1.2);
+	transition: 0.1s ease-in-out;
+}
+
+.photo-popup-image-container {
+	width: 550px;
+	height: 550px;
+	margin: 15px;
+	border-radius: 15px;
+	overflow: hidden;
+}
+
+.photo-popup-image-container img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.photo-popup-info {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+}
+
+
 .profile-area {
 	display: flex;
 	flex-direction: column;
@@ -382,18 +550,19 @@ export default {
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	overflow: hidden;
 	position: relative;
-	
+
 }
 
 .photo-card:hover {
 	transform: scale(1.05);
-	transition: fill 0.05s ease-in-out;	
+	transition: 0.05s ease-in-out;
 }
 
 .photo-img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;	/* Makes images cover the card area without distorting aspect ratio */
+	object-fit: cover;
+	/* Makes images cover the card area without distorting aspect ratio */
 	position: absolute;
 }
 
@@ -479,5 +648,4 @@ export default {
 	width: 100%;
 	text-align: center;
 }
-
 </style>

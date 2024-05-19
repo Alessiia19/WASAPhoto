@@ -41,10 +41,12 @@ type Like struct {
 
 // Comment rappresenta un commento su una foto.
 type Comment struct {
-	CommentID   int    `json:"commentID"`
-	AuthorID    int    `json:"authorID"`
-	PhotoID     int    `json:"photoID"`
-	CommentText string `json:"commentText"`
+	CommentID      int       `json:"commentID"`
+	AuthorID       int       `json:"authorID"`
+	AuthorUsername string    `json:"authorUsername"`
+	PhotoID        int       `json:"photoID"`
+	CommentText    string    `json:"commentText"`
+	UploadDate     time.Time `json:"uploadDate"`
 }
 
 type Profile struct {

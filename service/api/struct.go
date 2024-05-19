@@ -104,24 +104,30 @@ func (l *Like) LikeToDatabase() database.Like {
 
 // Comment rappresenta un commento su una foto.
 type Comment struct {
-	CommentID   int    `json:"commentID"`
-	AuthorID    int    `json:"authorID"`
-	PhotoID     int    `json:"photoID"`
-	CommentText string `json:"commentText"`
+	CommentID      int       `json:"commentID"`
+	AuthorID       int       `json:"authorID"`
+	AuthorUsername string    `json:"authorUsername"`
+	PhotoID        int       `json:"photoID"`
+	CommentText    string    `json:"commentText"`
+	UploadDate     time.Time `json:"uploadDate"`
 }
 
 func (c *Comment) CommentFromDatabase(comment database.Comment) {
 	c.CommentID = comment.CommentID
 	c.AuthorID = comment.AuthorID
+	c.AuthorUsername = comment.AuthorUsername
 	c.PhotoID = comment.PhotoID
 	c.CommentText = comment.CommentText
+	c.UploadDate = comment.UploadDate
 }
 
 func (c *Comment) CommentToDatabase() database.Comment {
 	return database.Comment{
-		CommentID:   c.CommentID,
-		AuthorID:    c.AuthorID,
-		PhotoID:     c.PhotoID,
-		CommentText: c.CommentText,
+		CommentID:      c.CommentID,
+		AuthorID:       c.AuthorID,
+		AuthorUsername: c.AuthorUsername,
+		PhotoID:        c.PhotoID,
+		CommentText:    c.CommentText,
+		UploadDate:     c.UploadDate,
 	}
 }

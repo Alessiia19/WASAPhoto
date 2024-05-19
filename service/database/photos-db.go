@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 // CreatePhoto carica una nuova foto nel database.
@@ -61,11 +62,6 @@ func (db *appdbimpl) LikePhoto(userID int, photoID int, l Like) error {
 	if err == nil {
 		return fmt.Errorf("cannot like a photo published by a user who has banned you")
 	}
-
-	/*
-		if isBanned == 1 {
-			return errors.New("cannot like a photo published by a user who has banned you")
-		}*/
 
 	// Incrementa il numero di likes della foto.
 	_, err = db.c.Exec("UPDATE photos SET likesCount = likesCount + 1 WHERE photoid = ?", photoID)
@@ -127,7 +123,7 @@ func (db *appdbimpl) UnlikePhoto(userID, photoID, likeID int) error {
 }
 
 // CommentPhoto aggiunge un commento a una foto nel database.
-func (db *appdbimpl) CommentPhoto(userID, photoID int, c Comment) (Comment, error) {
+func (db *appdbimpl) CommentPhoto(userID, photoID int, authorUsername string, c Comment) (Comment, error) {
 	// Verifica se la foto esiste.
 	var existingPhoto int
 	err := db.c.QueryRow("SELECT 1 FROM photos WHERE photoid = ?", photoID).Scan(&existingPhoto)
@@ -146,16 +142,14 @@ func (db *appdbimpl) CommentPhoto(userID, photoID int, c Comment) (Comment, erro
 	// Verifica se l'utente che ha pubblicato la foto ha bannato l'utente corrente.
 	var isBanned int
 	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, photoAuthorID).Scan(&isBanned)
-	if err != nil {
-		return c, fmt.Errorf("error checking if user is banned: %w", err)
+	if err == nil {
+		return c, fmt.Errorf("cannot comment a photo published by a user who has banned you")
 	}
 
-	if isBanned == 1 {
-		return c, errors.New("cannot comment a photo published by a user who has banned you")
-	}
+	uploadDate := time.Now()
 
 	// Aggiungi il commento alla tabella dei commenti.
-	result, err := db.c.Exec("INSERT INTO comments (userID, photoID, commentText) VALUES (?, ?, ?)", userID, photoID, c.CommentText)
+	result, err := db.c.Exec("INSERT INTO comments (userid, username, photoid, commentText, uploadDate) VALUES (?, ?, ?, ?, ?)", userID, authorUsername, photoID, c.CommentText, uploadDate)
 	if err != nil {
 		return c, fmt.Errorf("error inserting comment into database: %w", err)
 	}
@@ -173,8 +167,10 @@ func (db *appdbimpl) CommentPhoto(userID, photoID int, c Comment) (Comment, erro
 	}
 
 	c.AuthorID = userID
+	c.AuthorUsername = authorUsername
 	c.CommentID = int(commentID)
 	c.PhotoID = photoID
+	c.UploadDate = uploadDate
 	return c, nil
 }
 
