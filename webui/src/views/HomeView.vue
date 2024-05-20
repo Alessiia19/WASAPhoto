@@ -303,14 +303,13 @@ export default {
 .comments-list {
 	height: 140px;
 	margin-bottom: 15px;
+	margin-right: 2px;
 	overflow-y: auto;
-	overflow-x: auto;
+	word-wrap: break-word;
 }
 
 .comment-text {
 	margin-bottom: 20px;
-	overflow-wrap: break-word;
-	word-wrap: break-word;
 }
 
 .header-home-content {
@@ -456,6 +455,7 @@ export default {
 
 .stream-photo-info>* {
 	margin-bottom: 10px;
+	width: 570px;
 }
 
 .stream-photo-info,
