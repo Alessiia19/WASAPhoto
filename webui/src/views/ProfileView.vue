@@ -10,6 +10,7 @@ export default {
 			isFollowed: false,
 			errormsg: null,
 			isPhotoPopupOpen: false,
+			newComment: '',
 			selectedPhoto: {
 				photoID: 0,
 				userID: 0,
@@ -18,7 +19,16 @@ export default {
 				likesCount: 0,
 				likes: [],
 				commentsCount: 0,
-				comments: [],
+				comments: [
+					{
+						commentID: 0,
+						authorID: 0,
+						authorUsername: '',
+						photoID: 0,
+						commentText: '',
+						uploadDate: '',
+					}
+				],
 				isLiked: false,
 			},
 			loading: false,
@@ -40,7 +50,16 @@ export default {
 						likesCount: 0,
 						likes: [],
 						commentsCount: 0,
-						comments: [],
+						comments: [
+							{
+								commentID: 0,
+								authorID: 0,
+								authorUsername: '',
+								photoID: 0,
+								commentText: '',
+								uploadDate: '',
+							}
+						],
 						isLiked: false,
 					}
 				],
@@ -157,7 +176,7 @@ export default {
 					}
 
 					if (this.selectedPhoto) {
-						this.updateSelectedPhotoLikes(this.selectedPhoto.photoID)
+						this.updateSelectedPhoto(this.selectedPhoto.photoID)
 					}
 
 					this.$router.push({ path: '/users/' + this.$route.params.username })
@@ -177,6 +196,23 @@ export default {
 		openPhotoPopup(photo) {
 			this.selectedPhoto = photo;
 			this.isPhotoPopupOpen = true;
+		},
+
+		async postComment(photo) {
+			if (!this.newComment.trim()) {
+				return;
+			}
+			try {
+				// Inviare il nuovo commento al server
+				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: this.newComment }, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.newComment = ''; // Resetta l'input
+				photo.commentsCount += 1;
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error posting comment:', error);
+			}
 		},
 
 		async setMyUserName() {
@@ -224,10 +260,11 @@ export default {
 
 		},
 
-		async updateSelectedPhotoLikes(photoID) {
+		async updateSelectedPhoto(photoID) {
 			const updatedPhoto = this.userProfile.uploadedPhotos.find(p => p.photoID === photoID);
 			if (updatedPhoto) {
 				this.selectedPhoto.likes = updatedPhoto.likes;
+				this.selectedPhoto.comments = updatedPhoto.comments;
 			}
 		},
 
@@ -327,14 +364,38 @@ export default {
 			</div>
 		</main>
 
+		<!-- Photo popup -->
 		<div v-if="isPhotoPopupOpen" class="photo-popup-overlay" @click="closePhotoPopup">
 			<div class="photo-popup-card" @click.stop>
 				<div class="photo-popup-image-container">
 					<img :src="'data:image/jpeg;base64,' + selectedPhoto.imageData"
 						alt="Photo by {{ selectedPhoto.username }}" />
 				</div>
+
+				<!-- Photo popup infos -->
 				<div class="photo-popup-info">
 					<div class="photo-author">{{ selectedPhoto.username }}</div>
+
+					<!-- Comment section -->
+					<div class="photo-comments">
+						<div class="comments-list">
+							<p v-for="comment in selectedPhoto.comments" :key="comment.commentID" class="comment-text">
+								<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
+							</p>
+						</div>
+						<div class="comment-input-container">
+							<textarea v-model="newComment" placeholder="Add a comment..."
+								class="comment-input"></textarea>
+							<div @click="postComment(selectedPhoto)" class="send-icon">
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+									class="bi bi-send-fill" viewBox="0 0 16 16">
+									<path
+										d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471z" />
+								</svg>
+							</div>
+						</div>
+					</div>
+
 					<div class="photo-engagement-stats">
 						<div v-if="!isMyProfile" class="photo-popup-heart-icon">
 							<svg v-if="selectedPhoto.isLiked" @click="unlikePhoto(selectedPhoto)"
@@ -495,6 +556,13 @@ export default {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-around;
+	margin-left: 10px;
+	margin-right: 12px;
+	width: 403px;
+}
+
+.photo-popup-info .comments-list {
+	height: 350px;
 }
 
 
