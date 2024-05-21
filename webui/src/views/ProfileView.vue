@@ -420,7 +420,7 @@ export default {
 				<button @click="confirmDelete" class="delete-button">Confirm</button>
 				<button @click="closeDeleteModal" class="cancel-button">Cancel</button>
 			</div>
-		</div>
+		</div> 
 
 		<!-- Photo popup -->
 		<div v-if="isPhotoPopupOpen" class="photo-popup-overlay" @click="closePhotoPopup">
