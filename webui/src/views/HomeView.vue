@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 export default {
 	data() {
 		return {
+			activeCommentMenu: null,
 			errormsg: null,
 			loading: false,
 			userID: localStorage.getItem('userID'),
@@ -29,6 +30,7 @@ export default {
 							photoID: 0,
 							commentText: '',
 							uploadDate: '',
+							isMyComment: false,
 						}
 					],
 					isLiked: false,
@@ -53,6 +55,17 @@ export default {
 		async clearSearch() {
 			this.searchQuery = '';
 			this.users = [];
+		},
+
+		async deleteComment(photoID, commentID) {
+			try {
+				await this.$axios.delete('/users/' + this.userID + '/photos/' + photoID + '/comments/' + commentID, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.loadStreamData();
+			} catch (error) {
+				console.error('Error deleting comment:', error);
+			}
 		},
 
 		async goToUserProfile(userToSearch) {
@@ -85,15 +98,17 @@ export default {
 				});
 				this.photos = response.data
 				if (this.photos) {
-					this.photos.map(photo => {
+					this.photos.forEach(photo => {
+						if (photo.comments) {
+							photo.comments.forEach(comment => {
+								comment.isMyComment = comment.authorID === parseInt(this.userID);
+							});
+						}
 						if (photo.likes) {
 							photo.isLiked = photo.likes.some(like => like.userID === parseInt(this.userID));
-							return photo;
 						}
 					});
 				}
-				console.log(this.photos)
-
 			} catch (error) {
 				console.error('Error while retrieving user stream: ', error);
 			}
@@ -108,7 +123,7 @@ export default {
 				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: this.newComment }, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
-				this.newComment = ''; // Resetta l'input
+				this.newComment = ''; 
 				this.loadStreamData();
 			} catch (error) {
 				console.error('Error posting comment:', error);
@@ -130,8 +145,11 @@ export default {
 			}
 		},
 
+		toggleCommentMenu(commentID) {
+			this.activeCommentMenu = this.activeCommentMenu === commentID ? null : commentID;
+		},
+
 		async unlikePhoto(photo) {
-			// Trova il like specifico fatto dall'utente loggato
 			const userLike = photo.likes.find(like => like.userID === parseInt(this.userID));
 			try {
 				let response = await this.$axios.delete('/users/' + this.userID + '/photos/' + photo.photoID + '/likes/' + userLike.likeID, {
@@ -211,9 +229,22 @@ export default {
 							<!-- Comment section -->
 							<div class="photo-comments">
 								<div class="comments-list">
-									<p v-for="comment in photo.comments" :key="comment.commentID" class="comment-text">
-										<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
-									</p>
+									<div v-for="comment in photo.comments" :key="comment.commentID"
+										class="comment-container">
+										<p class="comment-text">
+											<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
+										</p>
+										<div class="comment-menu-icon" v-if="comment.isMyComment" @click="toggleCommentMenu(comment.commentID)">
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+												fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
+												<path
+													d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+											</svg>
+											<ul v-if="activeCommentMenu === comment.commentID" class="dropdown-menu">
+												<li @click="deleteComment(photo.photoID, comment.commentID)">delete</li>
+											</ul>
+										</div>
+									</div>
 								</div>
 								<div class="comment-input-container">
 									<textarea v-model="newComment" placeholder="Add a comment..."
@@ -228,7 +259,7 @@ export default {
 								</div>
 							</div>
 
-
+							<!-- Engagement stats -->
 							<div class="photo-engagement-stats">
 								<div class="heart-icon">
 									<svg v-if="photo.isLiked" @click="unlikePhoto(photo)"
@@ -282,6 +313,15 @@ export default {
 	margin-top: 7px;
 }
 
+.comment-container {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 20px;
+	padding-right: 15px;
+	position: relative;
+}
+
 .comment-icon {
 	margin-bottom: 15px;
 }
@@ -296,7 +336,7 @@ export default {
 }
 
 .comment-input-container {
-    position: relative;
+	position: relative;
 	overflow-x: auto;
 }
 
@@ -308,8 +348,39 @@ export default {
 	word-wrap: break-word;
 }
 
+.comment-menu-icon {
+	flex-shrink: 0;
+	cursor: pointer;
+	align-self: flex-start;
+	margin-top: 2px;
+	height: 16px;
+}
+
 .comment-text {
-	margin-bottom: 20px;
+	flex: 1;
+	word-wrap: break-word;
+	max-width: 493px;
+}
+
+.dropdown-menu {
+	list-style: none;
+	position: absolute;
+	background-color: #fff;
+	border: 1px solid #ccc;
+	right: 0;
+	z-index: 100;
+	padding: 5px 10px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	display: block;
+}
+
+.dropdown-menu li {
+	cursor: pointer;
+	color: red;
+}
+
+.dropdown-menu:hover {
+	background-color: #f0f0f0;
 }
 
 .header-home-content {
@@ -399,10 +470,10 @@ export default {
 	margin-right: 10px;
 	border-radius: 5px;
 	position: absolute;
-    top: 15px;
-    right: 15px; 
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out;
+	top: 15px;
+	right: 15px;
+	cursor: pointer;
+	transition: transform 0.2s ease-in-out;
 }
 
 .send-icon:hover {

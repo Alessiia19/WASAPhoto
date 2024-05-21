@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 export default {
 	data: function () {
 		return {
+			activeCommentMenu: null,
 			isEditingUsername: false,
 			usernameWasModified: false,
 			isMyProfile: false,
@@ -58,6 +59,7 @@ export default {
 								photoID: 0,
 								commentText: '',
 								uploadDate: '',
+								isMyComment: false,
 							}
 						],
 						isLiked: false,
@@ -90,6 +92,18 @@ export default {
 		closePhotoPopup() {
 			this.isPhotoPopupOpen = false;
 			this.selectedPhoto = null;
+		},
+
+		async deleteComment(photoID, commentID) {
+			try {
+				await this.$axios.delete('/users/' + this.userID + '/photos/' + photoID + '/comments/' + commentID, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.selectedPhoto.commentsCount -= 1;
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error deleting comment:', error);
+			}
 		},
 
 		enableEditing() {
@@ -174,17 +188,16 @@ export default {
 							}
 						});
 					}
-
-					if (this.selectedPhoto) {
-						this.updateSelectedPhoto(this.selectedPhoto.photoID)
-					}
-
 					this.$router.push({ path: '/users/' + this.$route.params.username })
 
 				} catch (error) {
 					console.error('Errore nel recupero dei dati del profilo:', error);
 				}
 			}
+			if (this.selectedPhoto) {
+				this.updateSelectedPhoto(this.selectedPhoto.photoID)
+			}
+
 			if (this.$route.params.username != this.username && !this.usernameWasModified) {
 				window.location.reload();
 			}
@@ -195,6 +208,7 @@ export default {
 
 		openPhotoPopup(photo) {
 			this.selectedPhoto = photo;
+			this.updateSelectedPhoto(this.selectedPhoto.photoID);
 			this.isPhotoPopupOpen = true;
 		},
 
@@ -231,6 +245,10 @@ export default {
 
 		},
 
+		toggleCommentMenu(commentID) {
+			this.activeCommentMenu = this.activeCommentMenu === commentID ? null : commentID;
+		},
+
 		async unfollowUser() {
 			try {
 				let response = await this.$axios.delete('/users/' + this.userID + '/following/' + parseInt(this.userToSearchID), {
@@ -265,6 +283,11 @@ export default {
 			if (updatedPhoto) {
 				this.selectedPhoto.likes = updatedPhoto.likes;
 				this.selectedPhoto.comments = updatedPhoto.comments;
+				if (this.selectedPhoto.comments) {
+					this.selectedPhoto.comments.forEach(comment => {
+						comment.isMyComment = comment.authorID === parseInt(this.userID);
+					});
+				}
 			}
 		},
 
@@ -379,9 +402,23 @@ export default {
 					<!-- Comment section -->
 					<div class="photo-comments">
 						<div class="comments-list">
-							<p v-for="comment in selectedPhoto.comments" :key="comment.commentID" class="comment-text">
-								<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
-							</p>
+							<div v-for="comment in selectedPhoto.comments" :key="comment.commentID"
+								class="comment-container">
+								<p class="comment-text">
+									<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
+								</p>
+								<div class="comment-menu-icon" v-if="comment.isMyComment"
+									@click="toggleCommentMenu(comment.commentID)">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+										class="bi bi-three-dots" viewBox="0 0 16 16">
+										<path
+											d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+									</svg>
+									<ul v-if="activeCommentMenu === comment.commentID" class="dropdown-menu">
+										<li @click="deleteComment(selectedPhoto.photoID, comment.commentID)">delete</li>
+									</ul>
+								</div>
+							</div>
 						</div>
 						<div class="comment-input-container">
 							<textarea v-model="newComment" placeholder="Add a comment..."
@@ -565,6 +602,9 @@ export default {
 	height: 350px;
 }
 
+.photo-popup-info .comment-text {
+	max-width: 325px;
+}
 
 .profile-area {
 	display: flex;
