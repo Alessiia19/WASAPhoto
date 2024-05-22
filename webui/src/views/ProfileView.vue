@@ -531,14 +531,14 @@ export default {
 	color: white;
 	border: none;
 	padding: 10px 20px;
-	margin: 10px;
+	margin: 5px;
 	border-radius: 5px;
 	cursor: pointer;
+	font-weight: bold;
 }
 
-.cancel-button:hover,
-.delete-button:hover {
-	opacity: 0.8;
+.cancel-button:hover {
+	opacity: 0.75;
 }
 
 .delete-button {
@@ -546,9 +546,14 @@ export default {
     color: white;
     border: none;
     padding: 10px 20px;
-    margin: 10px;
+    margin: 5px;
     border-radius: 5px;
     cursor: pointer;
+	font-weight: bold;
+}
+
+.delete-button:hover {
+	background-color: rgb(206, 4, 4);
 }
 
 .edit-icon-button {
@@ -623,6 +628,7 @@ export default {
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
+	width: 400px;
 }
 
 .photo-popup-overlay {
