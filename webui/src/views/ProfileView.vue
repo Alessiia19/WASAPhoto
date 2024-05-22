@@ -5,6 +5,7 @@ export default {
 	data: function () {
 		return {
 			activeCommentMenu: null,
+			showDeleteModal: false,
 			isEditingUsername: false,
 			usernameWasModified: false,
 			isMyProfile: false,
@@ -89,9 +90,20 @@ export default {
 
 		},
 
+		closeDeleteModal() {
+			this.showDeleteModal = false;
+		},
+
 		closePhotoPopup() {
 			this.isPhotoPopupOpen = false;
 			this.selectedPhoto = null;
+		},
+
+		confirmDelete() {
+			if (this.selectedPhoto) {
+				this.deletePhoto(this.selectedPhoto.photoID);
+				this.closeDeleteModal();
+			}
 		},
 
 		async deleteComment(photoID, commentID) {
@@ -103,6 +115,18 @@ export default {
 				this.loadProfileData();
 			} catch (error) {
 				console.error('Error deleting comment:', error);
+			}
+		},
+
+		async deletePhoto(photoID) {
+			try {
+				await this.$axios.delete('/users/' + this.userID + '/photos/' + photoID, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.closePhotoPopup();
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error deleting photo:', error);
 			}
 		},
 
@@ -206,6 +230,10 @@ export default {
 			}
 		},
 
+		async openDeleteModal() {
+			this.showDeleteModal = true;
+		},
+
 		openPhotoPopup(photo) {
 			this.selectedPhoto = photo;
 			this.updateSelectedPhoto(this.selectedPhoto.photoID);
@@ -290,7 +318,6 @@ export default {
 				}
 			}
 		},
-
 
 		validateUsername() {
 			const usernameRegex = /^[a-zA-Z0-9]+$/;
@@ -387,6 +414,14 @@ export default {
 			</div>
 		</main>
 
+		<div v-if="showDeleteModal" class="modal">
+			<div class="modal-content">
+				<h4>Are you sure you want to delete this photo?</h4>
+				<button @click="confirmDelete" class="delete-button">Confirm</button>
+				<button @click="closeDeleteModal" class="cancel-button">Cancel</button>
+			</div>
+		</div> 
+
 		<!-- Photo popup -->
 		<div v-if="isPhotoPopupOpen" class="photo-popup-overlay" @click="closePhotoPopup">
 			<div class="photo-popup-card" @click.stop>
@@ -397,7 +432,15 @@ export default {
 
 				<!-- Photo popup infos -->
 				<div class="photo-popup-info">
-					<div class="photo-author">{{ selectedPhoto.username }}</div>
+					<div class="photo-author">{{ selectedPhoto.username }}
+						<div class="trash-icon" v-if="isMyProfile" @click="openDeleteModal()">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+								class="bi bi-trash3" viewBox="0 0 16 16">
+								<path
+									d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+							</svg>
+						</div>
+					</div>
 
 					<!-- Comment section -->
 					<div class="photo-comments">
@@ -483,6 +526,36 @@ export default {
 	height: 50px;
 }
 
+.cancel-button {
+	background-color: grey;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	margin: 5px;
+	border-radius: 5px;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+.cancel-button:hover {
+	opacity: 0.75;
+}
+
+.delete-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+	font-weight: bold;
+}
+
+.delete-button:hover {
+	background-color: rgb(206, 4, 4);
+}
+
 .edit-icon-button {
 	margin-left: 10px;
 	background: none;
@@ -535,6 +608,27 @@ export default {
 
 .info-value {
 	margin-left: 5px;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+	width: 400px;
 }
 
 .photo-popup-overlay {

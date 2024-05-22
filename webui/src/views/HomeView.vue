@@ -123,13 +123,12 @@ export default {
 				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: this.newComment }, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
-				this.newComment = ''; 
+				this.newComment = '';
 				this.loadStreamData();
 			} catch (error) {
 				console.error('Error posting comment:', error);
 			}
 		},
-
 
 		async searchUsers() {
 			if (!this.searchQuery.trim()) {
@@ -234,7 +233,8 @@ export default {
 										<p class="comment-text">
 											<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
 										</p>
-										<div class="comment-menu-icon" v-if="comment.isMyComment" @click="toggleCommentMenu(comment.commentID)">
+										<div class="comment-menu-icon" v-if="comment.isMyComment"
+											@click="toggleCommentMenu(comment.commentID)">
 											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
 												fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
 												<path
@@ -322,6 +322,10 @@ export default {
 	position: relative;
 }
 
+.comment-container:hover .comment-menu-icon {
+	visibility: visible;
+}
+
 .comment-icon {
 	margin-bottom: 15px;
 }
@@ -354,6 +358,7 @@ export default {
 	align-self: flex-start;
 	margin-top: 2px;
 	height: 16px;
+	visibility: hidden;
 }
 
 .comment-text {
@@ -403,6 +408,9 @@ export default {
 	font-weight: bold;
 	font-size: 18px;
 	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
 }
 
 .photo-comments {
@@ -537,6 +545,10 @@ export default {
 
 .top-rounded {
 	border-radius: 20px 20px 0px 0px;
+}
+
+.trash-icon:hover {
+	color: red
 }
 
 .unselectable {
