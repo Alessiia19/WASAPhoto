@@ -333,6 +333,8 @@ func (db *appdbimpl) GetBanStatus(userID, userToCheckID int) (bool, error) {
 	if err == nil {
 		// L'utente ha bloccato l'altro utente
 		return true, nil
+	} else if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
 	}
 	return false, err
 }
