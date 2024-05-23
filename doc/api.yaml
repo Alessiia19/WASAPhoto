@@ -519,12 +519,7 @@ paths:
           $ref: '#/components/responses/NotFoundError'
 
   /users/{userid}/banned_users/{banneduserid}:
-    delete:
-      tags: ["User"]
-      summary: Removes a user from the list of users banned by the specified user
-      description: Unblocking a user allows them to view your profile information.
-      operationId: unbanUser
-      parameters:
+    parameters:
         - name: userid
           in: path
           required: true
@@ -534,10 +529,16 @@ paths:
         - name: banneduserid
           in: path
           required: true
-          description: ID of the user you want to unban.
+          description: User ID.
           schema:
             $ref: '#/components/schemas/userid'
-                    
+            
+    delete:
+      tags: ["User"]
+      summary: Removes a user from the list of users banned by the specified user
+      description: Unblocking a user allows them to view your profile information.
+      operationId: unbanUser
+                  
       responses:
         '201':
           description: User unbanned successfully
@@ -560,6 +561,30 @@ paths:
           
         '404':
           $ref: '#/components/responses/NotFoundError'
+          
+    get:
+      tags: ["User"]
+      summary: Returns the ban status of the specified user
+      description: |-
+        Returns true if banneduserid is banned by userid, false otherwise.
+      operationId: getBanStatus
+      
+      responses:
+        '200':
+          description: Boolean representing if the user is banned or not.
+          content: 
+            application/json:
+              schema:
+                description: Ban status
+                type: boolean
+                example: true
+        
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          
+        '401': 
+          $ref: '#/components/responses/UnauthorizedError'
+          
 
   /users/{userid}/stream:
     get:

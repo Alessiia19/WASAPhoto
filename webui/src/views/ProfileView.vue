@@ -10,6 +10,7 @@ export default {
 			usernameWasModified: false,
 			isMyProfile: false,
 			isFollowed: false,
+			isBanned: false,
 			errormsg: null,
 			isPhotoPopupOpen: false,
 			newComment: '',
@@ -83,6 +84,19 @@ export default {
 	},
 
 	methods: {
+
+		async banUser() {
+			try {
+				let response = await this.$axios.post('/users/' + this.userID + '/banned_users', { userid: parseInt(this.userToSearchID) }, {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.isBanned = true;
+				this.isFollowed = false;
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error while attempting to ban:', error);
+			}
+		},
 
 		async checkIfOwnProfile() {
 			const routeUsername = this.$route.params.username;
@@ -277,6 +291,18 @@ export default {
 			this.activeCommentMenu = this.activeCommentMenu === commentID ? null : commentID;
 		},
 
+		async unbanUser() {
+			try {
+				let response = await this.$axios.delete('/users/' + this.userID + '/banned_users/' + parseInt(this.userToSearchID), {
+					headers: { Authorization: "Bearer " + this.userID }
+				});
+				this.isBanned = false;
+				this.loadProfileData();
+			} catch (error) {
+				console.error('Error while attempting to unban:', error);
+			}
+		},
+
 		async unfollowUser() {
 			try {
 				let response = await this.$axios.delete('/users/' + this.userID + '/following/' + parseInt(this.userToSearchID), {
@@ -307,14 +333,16 @@ export default {
 		},
 
 		async updateSelectedPhoto(photoID) {
-			const updatedPhoto = this.userProfile.uploadedPhotos.find(p => p.photoID === photoID);
-			if (updatedPhoto) {
-				this.selectedPhoto.likes = updatedPhoto.likes;
-				this.selectedPhoto.comments = updatedPhoto.comments;
-				if (this.selectedPhoto.comments) {
-					this.selectedPhoto.comments.forEach(comment => {
-						comment.isMyComment = comment.authorID === parseInt(this.userID);
-					});
+			if (this.userProfile.uploadedPhotos){
+				const updatedPhoto = this.userProfile.uploadedPhotos.find(p => p.photoID === photoID);
+				if (updatedPhoto) {
+					this.selectedPhoto.likes = updatedPhoto.likes;
+					this.selectedPhoto.comments = updatedPhoto.comments;
+					if (this.selectedPhoto.comments) {
+						this.selectedPhoto.comments.forEach(comment => {
+							comment.isMyComment = comment.authorID === parseInt(this.userID);
+						});
+					}
 				}
 			}
 		},
@@ -375,6 +403,13 @@ export default {
 						<!-- Unfollow Button -->
 						<button v-if="!isMyProfile && isFollowed" class="unfollow-button"
 							@click="unfollowUser">Unfollow</button>
+
+						<!-- Ban Button -->
+						<button v-if="!isMyProfile && !isBanned" class="ban-button" @click="banUser">Ban</button>
+
+						<!-- Unban Button -->
+						<button v-if="!isMyProfile && isBanned" class="unban-button" @click="unbanUser">Unban</button>
+
 					</div>
 
 					<div class="profile-stats">
@@ -420,7 +455,7 @@ export default {
 				<button @click="confirmDelete" class="delete-button">Confirm</button>
 				<button @click="closeDeleteModal" class="cancel-button">Cancel</button>
 			</div>
-		</div> 
+		</div>
 
 		<!-- Photo popup -->
 		<div v-if="isPhotoPopupOpen" class="photo-popup-overlay" @click="closePhotoPopup">
@@ -519,6 +554,23 @@ export default {
 	margin-top: 7px;
 }
 
+.ban-button, .unban-button {
+    top: 20px;
+    right: 20px;
+    background: #d9534f;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    height: 40px;
+    margin-left: 20px;
+}
+
+.ban-button:hover, .unban-button:hover {
+    background: #c9302c;
+}
 
 .bi-camera {
 	fill: #666;
@@ -542,13 +594,13 @@ export default {
 }
 
 .delete-button {
-    background-color: red;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    margin: 5px;
-    border-radius: 5px;
-    cursor: pointer;
+	background-color: red;
+	color: white;
+	border: none;
+	padding: 10px 20px;
+	margin: 5px;
+	border-radius: 5px;
+	cursor: pointer;
 	font-weight: bold;
 }
 
@@ -611,23 +663,23 @@ export default {
 }
 
 .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
+	background: white;
+	padding: 20px;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	text-align: center;
 	width: 400px;
 }
 

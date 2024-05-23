@@ -347,3 +347,44 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(users)
 }
+
+// getBanStatus controlla se un utente è stato bannato dall'utente attualmente loggato
+func (rt *_router) getBanStatus(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Estrai l'ID dell'utente che compie l'azione dal path.
+	userID, err := strconv.Atoi(ps.ByName("userid"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.WithError(err).Error("getBanStatus: Invalid user ID format.")
+		return
+	}
+
+	// Authorization
+	bearerToken := extractBearer(r.Header.Get("Authorization"))
+	authorizationStatus := validateRequestingUser(strconv.Itoa(userID), bearerToken)
+	if authorizationStatus != http.StatusOK {
+		w.WriteHeader(authorizationStatus)
+		return
+	}
+
+	// Estrai l'ID dell'utente di cui si vuole vedere il ban status.
+	userToCheckID, err := strconv.Atoi(ps.ByName("banneduserid"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.WithError(err).Error("getBanStatus: Invalid user to check ID format.")
+		return
+	}
+
+	// Chiama la funzione del database per ottenere il ban status
+	isBanned, err := rt.db.GetBanStatus(userID, userToCheckID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctx.Logger.WithError(err).Error("getBanStatus: Error while checking ban status")
+		return
+	}
+
+	// Invia la risposta JSON con il risultato del check
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(isBanned)
+}
