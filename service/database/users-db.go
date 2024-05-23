@@ -159,13 +159,25 @@ func (db *appdbimpl) BanUser(userID, bannedUserID int) error {
 		return errors.New("you have banned this user")
 	}
 
-	// Utilizza la funzione UnfollowUser per gestire la rimozione dai followers e dai following.
+	// Utilizza la funzione UnfollowUser per gestire la rimozione dai followers e dai following
 	// L'utente bloccato smette automaticamente di essere sia follower che following dell'utente che lo blocca
-	if err := db.UnfollowUser(userID, bannedUserID); err != nil {
-		return fmt.Errorf("error handling unfollow during ban operation: %w", err)
+	var follows int
+	err = db.c.QueryRow("SELECT 1 FROM followers WHERE userid = ? AND followerid = ?", userID, bannedUserID).Scan(&follows)
+	if err == nil {
+		// L'utente da bannare segue l'utente che esegue il ban, procedi a rimuoverlo dai followers
+		if err := db.UnfollowUser(bannedUserID, userID); err != nil {
+			return fmt.Errorf("error handling unfollow during ban operation: %w", err)
+		}
 	}
-	if err := db.UnfollowUser(bannedUserID, userID); err != nil {
-		return fmt.Errorf("error handling unfollow during ban operation: %w", err)
+
+	// Verifica se l'utente che esegue il ban segue l'utente da bannare
+	var followed int
+	err = db.c.QueryRow("SELECT 1 FROM following WHERE userid = ? AND followingid = ?", userID, bannedUserID).Scan(&followed)
+	if err == nil {
+		// L'utente che esegue il ban segue l'utente da bannare, procedi a rimuoverlo dai following
+		if err := db.UnfollowUser(userID, bannedUserID); err != nil {
+			return fmt.Errorf("error handling unfollow during ban operation: %w", err)
+		}
 	}
 
 	// Aggiorna la tabella dei bloccati.
@@ -312,4 +324,15 @@ func (db *appdbimpl) GetUsers(usernameSubstring string) ([]User, error) {
 	}
 
 	return users, nil
+}
+
+// GetBanStatus controlla se un utente è stato bannato da un altro utente.
+func (db *appdbimpl) GetBanStatus(userID, userToCheckID int) (bool, error) {
+	var hasBanned int
+	err := db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, userToCheckID).Scan(&hasBanned)
+	if err == nil {
+		// L'utente ha bloccato l'altro utente
+		return true, nil
+	}
+	return false, err
 }

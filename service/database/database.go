@@ -53,6 +53,7 @@ type AppDatabase interface {
 	GetUserProfile(int, int) (Profile, error)
 	GetMyStream(int) ([]CompletePhoto, error)
 	GetUsers(string) ([]User, error)
+	GetBanStatus(int, int) (bool, error)
 
 	// utils
 	GetPhotoUserID(int) (int, error)
@@ -148,7 +149,7 @@ func createTables(db *sql.DB) error {
 		return fmt.Errorf("error creating following table: %w", err)
 	}
 
-	bansQuery := `CREATE TABLE banned_users (
+	bansQuery := `CREATE TABLE IF NOT EXISTS banned_users (
 		userid INTEGER,
 		banneduserid INTEGER,
 		PRIMARY KEY (userid, banneduserid),
@@ -159,7 +160,7 @@ func createTables(db *sql.DB) error {
 		return fmt.Errorf("error creating ban structure: %w", err)
 	}
 
-	likesQuery := `CREATE TABLE likes (
+	likesQuery := `CREATE TABLE IF NOT EXISTS likes (
 		likeid INTEGER PRIMARY KEY AUTOINCREMENT,
 		userid INTEGER,
 		photoid INTEGER,
