@@ -226,6 +226,18 @@ export default {
 							}
 						});
 					}
+
+					try {
+						let responseBan = await this.$axios.get('/users/' + this.userID + '/banned_users/' + this.userToSearchID, {
+							headers: {
+								Authorization: "Bearer " + this.userID
+							}
+						});
+						this.isBanned = responseBan.data
+					} catch (error) {
+						console.error('Errore durante il controllo del ban status:', error);
+					}
+
 					this.$router.push({ path: '/users/' + this.$route.params.username })
 
 				} catch (error) {
@@ -293,7 +305,7 @@ export default {
 
 		async unbanUser() {
 			try {
-				let response = await this.$axios.delete('/users/' + this.userID + '/banned_users/' + parseInt(this.userToSearchID), {
+				let response = await this.$axios.delete('/users/' + this.userID + '/banned_users/' + this.userToSearchID, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
 				this.isBanned = false;
@@ -333,7 +345,7 @@ export default {
 		},
 
 		async updateSelectedPhoto(photoID) {
-			if (this.userProfile.uploadedPhotos){
+			if (this.userProfile.uploadedPhotos) {
 				const updatedPhoto = this.userProfile.uploadedPhotos.find(p => p.photoID === photoID);
 				if (updatedPhoto) {
 					this.selectedPhoto.likes = updatedPhoto.likes;
@@ -554,22 +566,24 @@ export default {
 	margin-top: 7px;
 }
 
-.ban-button, .unban-button {
-    top: 20px;
-    right: 20px;
-    background: #d9534f;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 8px 15px;
-    cursor: pointer;
-    font-weight: bold;
-    height: 40px;
-    margin-left: 20px;
+.ban-button,
+.unban-button {
+	top: 20px;
+	right: 20px;
+	background: #d9534f;
+	color: white;
+	border: none;
+	border-radius: 10px;
+	padding: 8px 15px;
+	cursor: pointer;
+	font-weight: bold;
+	height: 40px;
+	margin-left: 20px;
 }
 
-.ban-button:hover, .unban-button:hover {
-    background: #c9302c;
+.ban-button:hover,
+.unban-button:hover {
+	background: #c9302c;
 }
 
 .bi-camera {
