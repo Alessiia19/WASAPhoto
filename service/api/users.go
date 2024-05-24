@@ -327,6 +327,17 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
+	// Ottieni l'userID dell'utente che vuole effettuare l'operazione dall'authorization
+	userIDstr := extractBearer(r.Header.Get("Authorization"))
+
+	// Converti l'ID utente da stringa a intero
+	userID, err := strconv.Atoi(userIDstr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		ctx.Logger.WithError(err).Error("getUsers: Invalid user ID")
+		return
+	}
+
 	// Ottieni la sottostringa di ricerca dall'URL query parameter "username"
 	query := r.URL.Query().Get("username")
 	if query == "" {
@@ -336,7 +347,7 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	// Chiama la funzione del database per ottenere gli utenti corrispondenti
-	users, err := rt.db.GetUsers(query)
+	users, err := rt.db.GetUsers(userID, query)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ctx.Logger.WithError(err).Error("getUsers: Error fetching users from database")

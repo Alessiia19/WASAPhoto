@@ -302,10 +302,10 @@ func (db *appdbimpl) GetMyStream(userID int) ([]CompletePhoto, error) {
 }
 
 // GetUsers cerca gli utenti per username che contiene la sottostringa specificata.
-func (db *appdbimpl) GetUsers(usernameSubstring string) ([]User, error) {
+func (db *appdbimpl) GetUsers(userID int, usernameSubstring string) ([]User, error) {
 	var users []User
-	query := "SELECT userid, username FROM users WHERE username LIKE ?"
-	rows, err := db.c.Query(query, "%"+usernameSubstring+"%")
+	query := "SELECT userid, username FROM users WHERE username LIKE ? AND userid NOT IN (SELECT userid FROM banned_users WHERE banneduserid = ?)"
+	rows, err := db.c.Query(query, "%"+usernameSubstring+"%", userID)
 	if err != nil {
 		return nil, fmt.Errorf("error querying users by username substring: %w", err)
 	}
