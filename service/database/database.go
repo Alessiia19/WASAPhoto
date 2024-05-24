@@ -52,7 +52,7 @@ type AppDatabase interface {
 	DeletePhoto(int, int) error
 	GetUserProfile(int, int) (Profile, error)
 	GetMyStream(int) ([]CompletePhoto, error)
-	GetUsers(string) ([]User, error)
+	GetUsers(int, string) ([]User, error)
 	GetBanStatus(int, int) (bool, error)
 
 	// utils

@@ -393,7 +393,10 @@ export default {
 			<div class="profile-card">
 				<div class="profile-photo"></div>
 				<div class="profile-info">
+
 					<div class="username-section">
+
+						<!-- Username -->
 						<h2 class="username" v-if="!isEditingUsername">{{ userProfile.username }}
 							<button v-if="isMyProfile" class="edit-icon-button" @click="enableEditing">
 								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -403,10 +406,17 @@ export default {
 								</svg>
 							</button>
 						</h2>
-						<input v-else type="text" v-model="userProfile.username" class="username-input"
-							@input="handleUsernameInput">
-						<button v-if="isEditingUsername" class="save-button" @click="setMyUserName">Save</button>
-						<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+
+						<!-- Change username -->
+						<div v-if="isEditingUsername" class="username-edit-section">
+							<div class="input-and-button">
+								<input type="text" v-model="userProfile.username"
+									class="username-input" @input="handleUsernameInput">
+								<button class="save-button"
+									@click="setMyUserName" :disabled="errormsg">Save</button>
+							</div>
+							<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
+						</div>
 
 						<!-- Follow Button -->
 						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser">+
@@ -473,8 +483,7 @@ export default {
 		<div v-if="isPhotoPopupOpen" class="photo-popup-overlay" @click="closePhotoPopup">
 			<div class="photo-popup-card" @click.stop>
 				<div class="photo-popup-image-container">
-					<img :src="'data:image/jpeg;base64,' + selectedPhoto.imageData"
-						alt="Photo by {{ selectedPhoto.username }}" />
+					<img :src="'data:image/jpeg;base64,' + selectedPhoto.imageData">
 				</div>
 
 				<!-- Photo popup infos -->
@@ -566,11 +575,18 @@ export default {
 	margin-top: 7px;
 }
 
+.ban-button {
+	background: #df0c41;
+}
+
+.ban-button:hover {
+	background: #c9302c;
+}
+
 .ban-button,
 .unban-button {
 	top: 20px;
 	right: 20px;
-	background: #d9534f;
 	color: white;
 	border: none;
 	border-radius: 10px;
@@ -579,11 +595,6 @@ export default {
 	font-weight: bold;
 	height: 40px;
 	margin-left: 20px;
-}
-
-.ban-button:hover,
-.unban-button:hover {
-	background: #c9302c;
 }
 
 .bi-camera {
@@ -697,6 +708,42 @@ export default {
 	width: 400px;
 }
 
+
+.photo-card {
+	width: 380px;
+	height: 380px;
+	margin: 20px;
+	background: #fff;
+	border-radius: 15px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+	overflow: hidden;
+	position: relative;
+
+}
+
+.photo-card:hover {
+	transform: scale(1.05);
+	transition: 0.05s ease-in-out;
+}
+
+.photo-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	/* Makes images cover the card area without distorting aspect ratio */
+	position: absolute;
+}
+
+.photos-grid {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	gap: 20px;
+	margin-top: 20px;
+	width: 1300px;
+
+}
+
 .photo-popup-overlay {
 	position: fixed;
 	top: 0;
@@ -805,43 +852,7 @@ export default {
 	display: flex;
 	justify-content: space-around;
 	width: 100%;
-	margin-top: 10px;
 	margin-left: 2px;
-}
-
-.photo-card {
-	width: 380px;
-	height: 380px;
-	margin: 20px;
-	background: #fff;
-	border-radius: 15px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-	overflow: hidden;
-	position: relative;
-
-}
-
-.photo-card:hover {
-	transform: scale(1.05);
-	transition: 0.05s ease-in-out;
-}
-
-.photo-img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	/* Makes images cover the card area without distorting aspect ratio */
-	position: absolute;
-}
-
-.photos-grid {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	gap: 20px;
-	margin-top: 20px;
-	width: 1300px;
-
 }
 
 .no-posts-container {
@@ -870,8 +881,22 @@ export default {
 	height: 40px;
 }
 
+.save-button:disabled {
+    background-color: #7694bd;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 .save-button:hover {
 	background: #365880;
+}
+
+.unban-button {
+	background: rgb(3, 175, 3);
+}
+
+.unban-button:hover {
+	background: rgb(3, 139, 3);
 }
 
 .unfollow-button {
@@ -900,6 +925,24 @@ export default {
 	font-size: 36px;
 	font-weight: bold;
 	margin-bottom: 20px;
+	display: flex;
+	flex-direction: row;
+}
+
+.username-edit-section {
+	position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.username-edit-section .text-danger {
+	position: absolute;
+	top: 55%; 
+    left: 0;
+    margin-top: 5px;
+	margin-left: 2px;
 }
 
 .username-input {

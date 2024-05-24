@@ -136,8 +136,12 @@ export default {
 				return;
 			}
 			try {
-				const response = await this.$axios.get(`/users?username=${this.searchQuery}`);
-				this.users = response.data;
+				const response = await this.$axios.get(`/users?username=${this.searchQuery}`, {
+					headers: {
+						Authorization: "Bearer " + this.userID
+					}
+				});
+				this.users = response.data || [];
 			} catch (e) {
 				this.errormsg = e.toString();
 				this.users = [];
@@ -202,7 +206,12 @@ export default {
 					<div class="search-container" @click.stop>
 						<input v-model="searchQuery" type="text" class="form-control custom"
 							:class="{ 'top-rounded': users.length, 'all-rounded': !users.length }" placeholder="Search"
-							aria-label="Search" name="searchbar" autocomplete="off" @click.stop>
+							aria-label="Search" name="searchbar" autocomplete="off">
+						<svg v-if="users.length" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+							class="bi bi-x-circle-fill clear-search-icon" viewBox="0 0 16 16" @click.stop="clearSearch">
+							<path
+								d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
+						</svg>
 						<ul v-if="users.length" class="search-dropdown pl-3">
 							<li v-for="user in users" :key="user.userID" @click="goToUserProfile(user)">
 								{{ user.username }}
@@ -217,8 +226,7 @@ export default {
 					<!-- Photo card -->
 					<div class="stream-photo-card" v-for="photo in this.photos" :key="photo.photoID">
 						<div class="stream-photo-image-container">
-							<img :src="'data:image/jpeg;base64,' + photo.imageData"
-								alt="Photo by {{ photo.username }}" />
+							<img :src="'data:image/jpeg;base64,' + photo.imageData">
 						</div>
 
 						<!-- Photo infos -->
@@ -311,6 +319,19 @@ export default {
 	font-size: 26px;
 	margin-left: 17px;
 	margin-top: 7px;
+}
+
+.clear-search-icon {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #ccc; 
+}
+
+.clear-search-icon:hover {
+    color: #000;
 }
 
 .comment-container {
