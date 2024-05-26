@@ -1,10 +1,17 @@
 <script>
 import { RouterLink } from 'vue-router'
+import { LottiePlayer } from '@lottiefiles/vue-lottie-player'
+import animationData from '@/assets/home_animation.json'
 
 export default {
+	components: {
+		LottiePlayer
+	},
+
 	data() {
 		return {
 			activeCommentMenu: null,
+			animationData,
 			errormsg: null,
 			loading: false,
 			userID: localStorage.getItem('userID'),
@@ -77,6 +84,14 @@ export default {
 			}
 		},
 
+		handleOutsideClick(event) {
+			// Controlla se il click è fuori dalla search bar
+			const searchBar = this.$refs.searchBar;
+			if (searchBar && !searchBar.contains(event.target)) {
+				this.clearSearch();
+			}
+		},
+
 		async likePhoto(photo) {
 			try {
 				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/likes', {}, {
@@ -90,6 +105,7 @@ export default {
 		},
 
 		async loadStreamData() {
+			this.photos = []
 			try {
 				let response = await this.$axios.get('/users/' + this.userID + '/stream', {
 					headers: {
@@ -111,6 +127,7 @@ export default {
 				}
 			} catch (error) {
 				console.error('Error while retrieving user stream: ', error);
+				this.photos = []
 			}
 		},
 
@@ -170,15 +187,11 @@ export default {
 
 	mounted() {
 		this.loadStreamData();
-		document.addEventListener('click', (event) => {
-			if (!this.$el.contains(event.target)) {
-				this.clearSearch();
-			}
-		});
+		document.addEventListener('click', this.handleOutsideClick);
 	},
 
 	beforeUnmount() {
-		document.removeEventListener('click', this.clearSearch);
+		document.removeEventListener('click', this.handleOutsideClick);
 	},
 
 	watch: {
@@ -203,12 +216,13 @@ export default {
 					</h1>
 
 					<!-- Search bar -->
-					<div class="search-container" @click.stop>
+					<div class="search-container" @click.stop ref="searchBar">
 						<input v-model="searchQuery" type="text" class="form-control custom"
 							:class="{ 'top-rounded': users.length, 'all-rounded': !users.length }" placeholder="Search"
 							aria-label="Search" name="searchbar" autocomplete="off">
-						<svg v-if="users.length" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-							class="bi bi-x-circle-fill clear-search-icon" viewBox="0 0 16 16" @click.stop="clearSearch">
+						<svg v-if="users.length" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+							fill="currentColor" class="bi bi-x-circle-fill clear-search-icon" viewBox="0 0 16 16"
+							@click.stop="clearSearch">
 							<path
 								d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
 						</svg>
@@ -218,6 +232,13 @@ export default {
 							</li>
 						</ul>
 					</div>
+				</div>
+
+				<div v-if="!photos" class="no-content-message">
+					<lottie-player :src="animationData" background="transparent" speed="0.5"
+						style="width: 300px; height: 300px;" loop autoplay></lottie-player>
+					<p class="no-content-text">There are no photos to display. Start following other users to see their
+						photos here!</p>
 				</div>
 
 				<!-- Stream photos -->
@@ -322,16 +343,16 @@ export default {
 }
 
 .clear-search-icon {
-    position: absolute;
-    right: 13px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #ccc; 
+	position: absolute;
+	right: 13px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: #ccc;
 }
 
 .clear-search-icon:hover {
-    color: #000;
+	color: #000;
 }
 
 .comment-container {
@@ -423,6 +444,23 @@ export default {
 .heart-icon:hover {
 	transform: scale(1.2);
 	transition: 0.1s ease-in-out;
+}
+
+.no-content-message {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 80vh;
+	text-align: center;
+}
+
+.no-content-text {
+	font-family: 'Fredoka', sans-serif;
+	font-weight: 400;
+	font-size: 24px;
+	color: #444;
+	margin-top: 20px;
 }
 
 .photo-author {
