@@ -1,10 +1,12 @@
 <script>
 import { RouterLink } from 'vue-router'
+import DefaultProfilePic from '@/assets/user_icon.svg'
 
 export default {
 	data: function () {
 		return {
 			activeCommentMenu: null,
+			DefaultProfilePic,
 			showDeleteModal: false,
 			isEditingUsername: false,
 			usernameWasModified: false,
@@ -391,7 +393,9 @@ export default {
 
 			<!-- User card -->
 			<div class="profile-card">
-				<div class="profile-photo"></div>
+				<div class="profile-photo">
+					<img :src="DefaultProfilePic" class="profile-image">
+				</div>
 				<div class="profile-info">
 
 					<div class="username-section">
@@ -845,7 +849,17 @@ export default {
 	height: 160px;
 	background: #ddd;
 	border-radius: 50%;
-	margin-right: 30px;
+    margin-right: 30px;
+	overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .profile-stats {
