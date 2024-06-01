@@ -1,12 +1,12 @@
 <script>
 import { RouterLink } from 'vue-router'
-import DefaultProfilePic from '@/assets/user_icon.svg'
+import defaultProfilePic from '@/assets/user_icon.svg'
 
 export default {
 	data: function () {
 		return {
 			activeCommentMenu: null,
-			DefaultProfilePic,
+			defaultProfilePic,
 			showDeleteModal: false,
 			isEditingUsername: false,
 			usernameWasModified: false,
@@ -424,7 +424,7 @@ export default {
 			<!-- User card -->
 			<div class="profile-card">
 				<div class="profile-photo">
-					<img :src="DefaultProfilePic" class="profile-image">
+					<img :src="defaultProfilePic" class="profile-image">
 				</div>
 				<div class="profile-info">
 
@@ -521,7 +521,10 @@ export default {
 
 				<!-- Photo popup infos -->
 				<div class="photo-popup-info">
-					<div class="photo-author">{{ selectedPhoto.username }}
+					<div class="photo-author-container">
+						<div class="photo-author">
+							<img class="author-image" :src="defaultProfilePic">{{ selectedPhoto.username }}
+						</div>
 						<div class="trash-icon" v-if="isMyProfile" @click="openDeleteModal()">
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
 								class="bi bi-trash3" viewBox="0 0 16 16">
@@ -743,6 +746,10 @@ export default {
 	width: 400px;
 }
 
+.photo-author-container {
+	display: flex;
+	justify-content: space-between
+}
 
 .photo-card {
 	width: 380px;
