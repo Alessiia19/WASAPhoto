@@ -5,14 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // UpdateUsername aggiorna l'username dell'utente specificato nel database.
 func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
+	// Converte il nuovo username in minuscolo per confrontarlo in modo insensibile alle maiuscole.
+	newUsernameLower := strings.ToLower(newUsername)
 
 	// Controlla se l'username è già in uso da un altro utente.
 	var existingUserID int
-	err := db.c.QueryRow("SELECT userid FROM users WHERE username = ?", newUsername).Scan(&existingUserID)
+	err := db.c.QueryRow("SELECT userid FROM users WHERE LOWER(username) = ?", newUsernameLower).Scan(&existingUserID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		// In caso di errore durante la ricerca dell'username, restituisci l'errore.
 		return fmt.Errorf("error checking existing username: %w", err)
@@ -28,18 +31,6 @@ func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 		// In caso di errore durante l'aggiornamento dell'username, restituisci l'errore.
 		return fmt.Errorf("error updating username in database: %w", err)
 	}
-	/*
-		// Verifica se l'utente è stato effettivamente aggiornato. - VALUTA SE LEVARE QUESTO CONTROLLO
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return fmt.Errorf("error checking rows affected after updating username: %w", err)
-		}
-
-		if rowsAffected == 0 {
-			// Se nessuna riga è stata modificata, significa che l'utente con quell'ID non esiste.
-			return sql.ErrNoRows
-		}
-	*/
 
 	return nil
 }

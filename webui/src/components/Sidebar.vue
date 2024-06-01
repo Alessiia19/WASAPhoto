@@ -5,7 +5,7 @@
 		},
 		data() {
 			return {
-				sidebarRoutes: ['home', 'uploadPhoto', 'profile'], // Routes che devono mostrare la sidebar
+				sidebarRoutes: ['home', 'uploadPhoto', 'profile', 'notFoundPage'], // Routes che devono mostrare la sidebar
 				
 			};
 		},
