@@ -3,6 +3,7 @@ import LoginView from '../views/LoginView.vue'
 import HomeView from '../views/HomeView.vue'
 import UploadPhotoView from '../views/UploadPhotoView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 
 
 const router = createRouter({
@@ -34,6 +35,16 @@ const router = createRouter({
 			name: 'profile',
 			component: ProfileView,	// User profile screen
 			props: true
+		},
+		{
+			path: '/not-found',
+			name: 'notFoundPage',
+			component: NotFoundView, // Not Found Page
+		},
+		{
+			path: '/:catchAll(.*)',
+			name: 'notFoundPage',
+			component: NotFoundView, // Not Found Page
 		},
 	]
 })

@@ -18,7 +18,6 @@ export default {
 			username: localStorage.getItem('username'),
 			searchQuery: "",
 			users: [],
-			newComment: '',
 			photos: [
 				{
 					photoID: 0,
@@ -28,6 +27,7 @@ export default {
 					uploadDate: '',
 					likesCount: 0,
 					likes: [],
+					newComment: '',
 					commentsCount: 0,
 					comments: [
 						{
@@ -75,6 +75,21 @@ export default {
 			}
 		},
 
+		formatDate(value) {
+			if (value) {
+				return new Date(value).toLocaleDateString('en-US', {
+					weekday: 'long', // "Monday"
+					year: 'numeric', // "2021"
+					month: 'long', // "July"
+					day: 'numeric', // "19"
+					hour: '2-digit', // "02"
+					minute: '2-digit', // "00"
+					hour12: true // use AM/PM
+				});
+			}
+			return '';
+		},
+
 		async goToUserProfile(userToSearch) {
 			if (userToSearch) {
 				localStorage.setItem("userToSearchID", userToSearch.userID)
@@ -105,7 +120,6 @@ export default {
 		},
 
 		async loadStreamData() {
-			this.photos = []
 			try {
 				let response = await this.$axios.get('/users/' + this.userID + '/stream', {
 					headers: {
@@ -132,15 +146,15 @@ export default {
 		},
 
 		async postComment(photo) {
-			if (!this.newComment.trim()) {
+			if (!photo.newComment.trim()) {
 				return;
 			}
 			try {
 				// Inviare il nuovo commento al server
-				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: this.newComment }, {
+				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: photo.newComment }, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
-				this.newComment = '';
+				photo.newComment = '';
 				this.loadStreamData();
 			} catch (error) {
 				console.error('Error posting comment:', error);
@@ -180,8 +194,7 @@ export default {
 			} catch (error) {
 				console.error('Error while attempting to unlike the photo:', error);
 			}
-		}
-
+		},
 
 	},
 
@@ -276,7 +289,7 @@ export default {
 									</div>
 								</div>
 								<div class="comment-input-container">
-									<textarea v-model="newComment" placeholder="Add a comment..."
+									<textarea v-model="photo.newComment" placeholder="Add a comment..."
 										class="comment-input"></textarea>
 									<div @click="postComment(photo)" class="send-icon">
 										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -313,6 +326,9 @@ export default {
 								</div>
 								<p>{{ photo.commentsCount }} Comments</p>
 							</div>
+
+							<!-- Upload Date -->
+							<div class="photo-upload-date">{{ formatDate(photo.uploadDate) }}</div>
 						</div>
 					</div>
 				</div>
@@ -484,6 +500,13 @@ export default {
 	align-items: center;
 	justify-content: start;
 	gap: 10px;
+}
+
+.photo-upload-date {
+	font-size: 14px;
+	color: #6c757d;
+	font-style: italic;
+	margin-top: 5px;
 }
 
 .search-container {

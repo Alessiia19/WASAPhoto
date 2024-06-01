@@ -162,6 +162,21 @@ export default {
 			}
 		},
 
+		formatDate(value) {
+			if (value) {
+				return new Date(value).toLocaleDateString('en-US', {
+					weekday: 'long', // "Monday"
+					year: 'numeric', // "2021"
+					month: 'long', // "July"
+					day: 'numeric', // "19"
+					hour: '2-digit', // "02"
+					minute: '2-digit', // "00"
+					hour12: true // use AM/PM
+				});
+			}
+			return '';
+		},
+
 		async handleRouteChange() {
 			if (!this.usernameWasModified) {
 				this.checkIfOwnProfile();
@@ -209,6 +224,21 @@ export default {
 			}
 
 			else if (!this.isMyProfile) {
+				try {
+					// Verifica se l'utente attuale è stato bannato dall'utente di cui si sta cercando il profilo
+					let responseBan = await this.$axios.get('/users/' + this.userToSearchID + '/banned_users/' + this.userID, {
+						headers: {
+							Authorization: "Bearer " + this.userToSearchID
+						}
+					});
+					if (responseBan.data) {
+						this.$router.replace({ path: '/not-found' });
+						return;
+					}
+				} catch (error) {
+					console.error('Errore durante il controllo del ban status:', error);
+				}
+
 				try {
 					let response = await this.$axios.get('/users/' + this.userToSearchID, {
 						headers: {
@@ -414,10 +444,9 @@ export default {
 						<!-- Change username -->
 						<div v-if="isEditingUsername" class="username-edit-section">
 							<div class="input-and-button">
-								<input type="text" v-model="userProfile.username"
-									class="username-input" @input="handleUsernameInput">
-								<button class="save-button"
-									@click="setMyUserName" :disabled="errormsg">Save</button>
+								<input type="text" v-model="userProfile.username" class="username-input"
+									@input="handleUsernameInput">
+								<button class="save-button" @click="setMyUserName" :disabled="errormsg">Save</button>
 							</div>
 							<div v-if="errormsg" class="text-danger">{{ errormsg }}</div>
 						</div>
@@ -559,6 +588,8 @@ export default {
 
 						<div>{{ selectedPhoto.commentsCount }} Comments</div>
 					</div>
+					<!-- Upload Date -->
+					<div class="photo-upload-date">{{ formatDate(selectedPhoto.uploadDate) }}</div>
 				</div>
 			</div>
 		</div>
@@ -849,17 +880,17 @@ export default {
 	height: 160px;
 	background: #ddd;
 	border-radius: 50%;
-    margin-right: 30px;
+	margin-right: 30px;
 	overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .profile-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .profile-stats {
@@ -896,9 +927,9 @@ export default {
 }
 
 .save-button:disabled {
-    background-color: #7694bd;
-    cursor: not-allowed;
-    opacity: 0.5;
+	background-color: #7694bd;
+	cursor: not-allowed;
+	opacity: 0.5;
 }
 
 .save-button:hover {
@@ -945,17 +976,17 @@ export default {
 
 .username-edit-section {
 	position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	width: 100%;
 }
 
 .username-edit-section .text-danger {
 	position: absolute;
-	top: 55%; 
-    left: 0;
-    margin-top: 5px;
+	top: 55%;
+	left: 0;
+	margin-top: 5px;
 	margin-left: 2px;
 }
 
