@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 import { LottiePlayer } from '@lottiefiles/vue-lottie-player'
 import animationData from '@/assets/home_animation.json'
+import defaultProfilePic from '@/assets/user_icon.svg'
 
 export default {
 	components: {
@@ -12,7 +13,9 @@ export default {
 		return {
 			activeCommentMenu: null,
 			animationData,
+			defaultProfilePic,
 			errormsg: null,
+			showBackToTop: false,
 			loading: false,
 			userID: localStorage.getItem('userID'),
 			username: localStorage.getItem('username'),
@@ -57,6 +60,13 @@ export default {
 				this.errormsg = e.toString();
 			}
 			this.loading = false;
+		},
+
+		backToTop() {
+			window.scrollTo({
+				top: 0,
+				behavior: 'smooth'
+			});
 		},
 
 		async clearSearch() {
@@ -105,6 +115,10 @@ export default {
 			if (searchBar && !searchBar.contains(event.target)) {
 				this.clearSearch();
 			}
+		},
+
+		handleScroll() {
+			this.showBackToTop = window.scrollY > 200;
 		},
 
 		async likePhoto(photo) {
@@ -201,10 +215,12 @@ export default {
 	mounted() {
 		this.loadStreamData();
 		document.addEventListener('click', this.handleOutsideClick);
+		window.addEventListener('scroll', this.handleScroll);
 	},
 
 	beforeUnmount() {
 		document.removeEventListener('click', this.handleOutsideClick);
+		window.removeEventListener('scroll', this.handleScroll);
 	},
 
 	watch: {
@@ -265,7 +281,10 @@ export default {
 
 						<!-- Photo infos -->
 						<div class="stream-photo-info">
-							<div class="photo-author">{{ photo.username }}</div>
+							<div class="photo-author">
+								<img class="author-image" :src="defaultProfilePic">
+								{{ photo.username }}
+							</div>
 
 							<!-- Comment section -->
 							<div class="photo-comments">
@@ -336,6 +355,14 @@ export default {
 			</div>
 		</main>
 
+		<!-- Back To Top Floating Button -->
+		<button v-show="showBackToTop" @click="backToTop" class="back-to-top">
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up"
+				viewBox="0 0 16 16">
+				<path fill-rule="evenodd"
+					d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5" />
+			</svg>
+		</button>
 	</div>
 </template>
 
@@ -356,6 +383,36 @@ export default {
 	font-size: 26px;
 	margin-left: 17px;
 	margin-top: 7px;
+}
+
+.author-image {
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	object-fit: cover;
+	margin-right: 10px;
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #446ca0; /* Scegli un colore che si adatti al tema */
+  color: white;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.back-to-top:hover {
+  background-color: #365880; /* Colore leggermente più scuro per l'hover */
 }
 
 .clear-search-icon {
@@ -485,7 +542,7 @@ export default {
 	width: 100%;
 	display: flex;
 	flex-direction: row;
-	justify-content: space-between;
+	margin-bottom: 10px;
 }
 
 .photo-comments {
@@ -493,6 +550,7 @@ export default {
 	border-right: 2px solid #e0e0e0;
 	display: flex;
 	flex-direction: column;
+	margin-bottom: 10px;
 }
 
 .photo-engagement-stats {
@@ -615,7 +673,6 @@ export default {
 }
 
 .stream-photo-info>* {
-	margin-bottom: 10px;
 	width: 570px;
 }
 
