@@ -2,11 +2,12 @@ package database
 
 import "strings"
 
+// CreateUser creates a new user or retrieves an existing user from the database.
 func (db *appdbimpl) CreateUser(u User) (User, error) {
 
 	var user User
 
-	// Converti l'username fornito in minuscolo per il confronto.
+	// Converts the provided username to lowercase for comparison.
 	usernameLower := strings.ToLower(u.Username)
 
 	// Check if the user already exists in the database.

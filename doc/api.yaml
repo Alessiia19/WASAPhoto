@@ -472,7 +472,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userid}/banned_users:
+  /users/{userid}/banned-users:
     post:
       tags: ["User"]
       summary: Adds a user to the list of users banned by the specified user
@@ -518,7 +518,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-  /users/{userid}/banned_users/{banneduserid}:
+  /users/{userid}/banned-users/{banneduserid}:
     parameters:
         - name: userid
           in: path

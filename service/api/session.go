@@ -32,8 +32,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	//  Attempt to create a new user or retrieve an existing user from the database.
 	newUser, err := rt.db.CreateUser(user.UserToDatabase())
 	if err != nil {
-		//  If there is an error creating or retrieving the user, returns an Internal Server Error status.
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

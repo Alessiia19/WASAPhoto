@@ -13,7 +13,7 @@ export default {
 
 <template>
     <!-- Header -->
-    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow header">
+    <header class="navbar sticky-top flex-md-nowrap p-0 header">
         <h1 class="app-title unselectable">WASAPhoto</h1>
     </header>
 

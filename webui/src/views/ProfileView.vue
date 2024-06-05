@@ -89,7 +89,7 @@ export default {
 
 		async banUser() {
 			try {
-				let response = await this.$axios.post('/users/' + this.userID + '/banned_users', { userid: parseInt(this.userToSearchID) }, {
+				let response = await this.$axios.post('/users/' + this.userID + '/banned-users', { userid: parseInt(this.userToSearchID) }, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
 				this.isBanned = true;
@@ -226,7 +226,7 @@ export default {
 			else if (!this.isMyProfile) {
 				try {
 					// Verifica se l'utente attuale è stato bannato dall'utente di cui si sta cercando il profilo
-					let responseBan = await this.$axios.get('/users/' + this.userToSearchID + '/banned_users/' + this.userID, {
+					let responseBan = await this.$axios.get('/users/' + this.userToSearchID + '/banned-users/' + this.userID, {
 						headers: {
 							Authorization: "Bearer " + this.userToSearchID
 						}
@@ -260,7 +260,7 @@ export default {
 					}
 
 					try {
-						let responseBan = await this.$axios.get('/users/' + this.userID + '/banned_users/' + this.userToSearchID, {
+						let responseBan = await this.$axios.get('/users/' + this.userID + '/banned-users/' + this.userToSearchID, {
 							headers: {
 								Authorization: "Bearer " + this.userID
 							}
@@ -337,7 +337,7 @@ export default {
 
 		async unbanUser() {
 			try {
-				let response = await this.$axios.delete('/users/' + this.userID + '/banned_users/' + this.userToSearchID, {
+				let response = await this.$axios.delete('/users/' + this.userID + '/banned-users/' + this.userToSearchID, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
 				this.isBanned = false;
@@ -414,7 +414,7 @@ export default {
 <template>
 	<div>
 		<!-- Header -->
-		<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow header">
+		<header class="navbar sticky-top flex-md-nowrap p-0 header">
 			<h1 class="app-title unselectable">WASAPhoto</h1>
 		</header>
 
@@ -452,8 +452,8 @@ export default {
 						</div>
 
 						<!-- Follow Button -->
-						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser">+
-							Follow</button>
+						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser" :disabled="isBanned">+
+							Follow </button>
 
 						<!-- Unfollow Button -->
 						<button v-if="!isMyProfile && isFollowed" class="unfollow-button"
@@ -569,7 +569,7 @@ export default {
 					</div>
 
 					<div class="photo-engagement-stats">
-						<div v-if="!isMyProfile" class="photo-popup-heart-icon">
+						<div class="photo-popup-heart-icon">
 							<svg v-if="selectedPhoto.isLiked" @click="unlikePhoto(selectedPhoto)"
 								xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
 								class="bi bi-heart-fill" viewBox="0 0 16 16">
@@ -601,12 +601,15 @@ export default {
 
 <style>
 .header {
-	background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);
+	/*background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);*/
+	background-image: none;
+	background-color: #fff;
+	box-shadow: 0 3px 5px rgba(0,0,0,0.2);
 	height: 70px;
 }
 
 .app-title {
-	color: #00264d;
+	color: #333333;
 	font-weight: bold;
 	font-size: 26px;
 	margin-left: 17px;
@@ -703,6 +706,12 @@ export default {
 	font-weight: bold;
 	height: 40px;
 	margin-left: 20px;
+}
+
+.follow-button:disabled {
+	background-color: #7694bd;
+	cursor: not-allowed;
+	opacity: 0.5;
 }
 
 .follow-button:hover {

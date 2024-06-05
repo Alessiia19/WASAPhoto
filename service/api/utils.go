@@ -11,7 +11,6 @@ import (
 // --- AUTHENTICATION FUNCTIONS ---
 
 // validateRequestingUser checks if the user is authorized.
-// It returns the appropriate HTTP status based on the authentication result.
 func validateRequestingUser(userID, bearerToken string) int {
 	if !isUserLoggedIn(bearerToken) {
 		// The user is not authenticated.
