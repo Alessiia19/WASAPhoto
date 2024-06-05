@@ -234,7 +234,7 @@ export default {
 <template>
 	<div>
 		<!-- Header -->
-		<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow header">
+		<header class="navbar sticky-top flex-md-nowrap p-0 header">
 			<h1 class="app-title unselectable">WASAPhoto</h1>
 		</header>
 
@@ -369,8 +369,10 @@ export default {
 
 <style>
 .header {
-	background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);
+	background-image: none;
+	background-color: #fff;
 	height: 70px;
+	box-shadow: 0 3px 5px rgba(0,0,0,0.2);
 }
 
 .all-rounded {
@@ -378,7 +380,7 @@ export default {
 }
 
 .app-title {
-	color: #00264d;
+	color: #333333;
 	font-weight: bold;
 	font-size: 26px;
 	margin-left: 17px;
@@ -400,7 +402,7 @@ export default {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #446ca0; /* Scegli un colore che si adatti al tema */
+  background-color: #446ca0; 
   color: white;
   border: none;
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -412,7 +414,7 @@ export default {
 }
 
 .back-to-top:hover {
-  background-color: #365880; /* Colore leggermente più scuro per l'hover */
+  background-color: #365880; 
 }
 
 .clear-search-icon {

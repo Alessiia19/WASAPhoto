@@ -9,7 +9,7 @@ import { RouterLink, RouterView } from 'vue-router'
 	<div class="container-fluid">
 		<div class="row">
 			<div class="col p-0">
-				<main>
+				<main class="main">
 					<Sidebar :currentRoute="$route.name"/>
 					<RouterView/>
 				</main>

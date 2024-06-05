@@ -67,7 +67,7 @@ export default {
 <template>
     <div>
         <!-- Header -->
-        <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow header">
+        <header class="navbar sticky-top flex-md-nowrap p-0 header">
             <h1 class="app-title unselectable">WASAPhoto</h1>
         </header>
 
@@ -102,18 +102,17 @@ export default {
 
 <style>
 .header {
-    background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);
+    background-image: none;
+    background-color: #fff;
+	box-shadow: 0 3px 5px rgba(0,0,0,0.2);
     height: 70px;
 }
 
 
 .app-title {
-    color: #00264d;
-    /* Colore del titolo dell'applicazione */
+    color: #333333;
     font-weight: bold;
-    /* Rende il titolo in grassetto */
     font-size: 26px;
-    /* Dimensione del titolo dell'applicazione */
     margin-left: 17px;
     margin-top: 7px;
 }

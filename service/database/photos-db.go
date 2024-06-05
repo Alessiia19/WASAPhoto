@@ -51,11 +51,6 @@ func (db *appdbimpl) LikePhoto(userID int, photoID int, l Like) error {
 		return err
 	}
 
-	// Controllo se l'utente sta cercando di mettere mi piace ad una sua foto - VALUTA SE TOGLIERLO
-	if userID == photoAuthorID {
-		return errors.New("cannot like your own photos")
-	}
-
 	// Verifica se l'utente che ha pubblicato la foto ha bannato l'utente corrente.
 	var isBanned int
 	err = db.c.QueryRow("SELECT 1 FROM banned_users WHERE userid = ? AND banneduserid = ?", userID, photoAuthorID).Scan(&isBanned)

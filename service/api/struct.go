@@ -6,17 +6,19 @@ import (
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/database"
 )
 
-// User structure
+// User structure.
 type User struct {
 	UserID   int    `json:"userID"`   // User's identifier
 	Username string `json:"username"` // User's username
 }
 
+// UserFromDatabase updates the current User struct with data from a database.User struct.
 func (u *User) UserFromDatabase(user database.User) {
 	u.UserID = user.UserID
 	u.Username = user.Username
 }
 
+// UserToDatabase converts the current User struct to a database.User struct.
 func (u *User) UserToDatabase() database.User {
 	return database.User{
 		UserID:   u.UserID,
@@ -24,9 +26,7 @@ func (u *User) UserToDatabase() database.User {
 	}
 }
 
-// Photo rappresenta un oggetto foto che include il nome dell'autore, l'URL dell'immagine, il numero di
-// "mi piace" e commenti, e dettagli sugli utenti che hanno messo "mi piace" o commentato, compresi
-// i commenti stessi.
+// Photo structure.
 type Photo struct {
 	UserID        int       `json:"userID"`
 	PhotoID       int       `json:"photoID"`
@@ -37,6 +37,7 @@ type Photo struct {
 	CommentsCount int       `json:"commentsCount"`
 }
 
+// PhotoFromDatabase updates the current Photo struct with data from a database.Photo struct.
 func (p *Photo) PhotoFromDatabase(photo database.Photo) {
 	p.PhotoID = photo.PhotoID
 	p.UserID = photo.UserID
@@ -47,6 +48,7 @@ func (p *Photo) PhotoFromDatabase(photo database.Photo) {
 	p.CommentsCount = photo.CommentsCount
 }
 
+// PhotoToDatabase converts the current Photo struct to a database.Photo struct.
 func (p *Photo) PhotoToDatabase() database.Photo {
 	return database.Photo{
 		PhotoID:       p.PhotoID,
@@ -59,6 +61,8 @@ func (p *Photo) PhotoToDatabase() database.Photo {
 	}
 }
 
+// CompletePhoto represents a photo object that includes the author's username, the image URL, the number of "likes" and comments,
+// and details about users who have liked or commented, including the likes and comments themselves.
 type CompletePhoto struct {
 	UserID        int       `json:"userID"`
 	PhotoID       int       `json:"photoID"`
@@ -82,18 +86,21 @@ type Profile struct {
 	UploadedPhotosCount int             `json:"uploadedPhotosCount"` // Uploaded photos number
 }
 
+// Like structure.
 type Like struct {
 	LikeID  int `json:"likeID"`
 	UserID  int `json:"userID"`
 	PhotoID int `json:"photoID"`
 }
 
+// LikeFromDatabase updates the current Like struct with data from a database.Like struct.
 func (l *Like) LikeFromDatabase(like database.Like) {
 	l.LikeID = like.LikeID
 	l.UserID = like.UserID
 	l.PhotoID = like.PhotoID
 }
 
+// LikeToDatabase converts the current Like struct to a database.Like struct.
 func (l *Like) LikeToDatabase() database.Like {
 	return database.Like{
 		LikeID:  l.LikeID,
@@ -102,7 +109,7 @@ func (l *Like) LikeToDatabase() database.Like {
 	}
 }
 
-// Comment rappresenta un commento su una foto.
+// Comment structure.
 type Comment struct {
 	CommentID      int       `json:"commentID"`
 	AuthorID       int       `json:"authorID"`
@@ -112,6 +119,7 @@ type Comment struct {
 	UploadDate     time.Time `json:"uploadDate"`
 }
 
+// CommentFromDatabase updates the current Comment struct with data from a database.Comment struct.
 func (c *Comment) CommentFromDatabase(comment database.Comment) {
 	c.CommentID = comment.CommentID
 	c.AuthorID = comment.AuthorID
@@ -121,6 +129,7 @@ func (c *Comment) CommentFromDatabase(comment database.Comment) {
 	c.UploadDate = comment.UploadDate
 }
 
+// CommentToDatabase converts the current Comment struct to a database.Comment struct.
 func (c *Comment) CommentToDatabase() database.Comment {
 	return database.Comment{
 		CommentID:      c.CommentID,
