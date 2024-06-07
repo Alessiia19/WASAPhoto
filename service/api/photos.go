@@ -226,6 +226,8 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
+	comment.UploadDate = time.Now()
+
 	newComment, err := rt.db.CommentPhoto(userID, photoID, user.Username, comment.CommentToDatabase())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

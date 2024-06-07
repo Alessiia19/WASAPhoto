@@ -110,7 +110,7 @@ func (db *appdbimpl) GetLikes(photoID int) ([]Like, error) {
 // getComments recupera tutti i commenti di una foto specifica.
 func (db *appdbimpl) GetComments(photoID int) ([]Comment, error) {
 	var comments []Comment
-	rows, err := db.c.Query("SELECT commentid, userid, username, photoid, commentText FROM comments WHERE photoid = ?", photoID)
+	rows, err := db.c.Query("SELECT commentid, userid, username, photoid, commentText, uploadDate FROM comments WHERE photoid = ?", photoID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching comments: %w", err)
 	}
@@ -118,7 +118,7 @@ func (db *appdbimpl) GetComments(photoID int) ([]Comment, error) {
 
 	for rows.Next() {
 		var comment Comment
-		if err := rows.Scan(&comment.CommentID, &comment.AuthorID, &comment.AuthorUsername, &comment.PhotoID, &comment.CommentText); err != nil {
+		if err := rows.Scan(&comment.CommentID, &comment.AuthorID, &comment.AuthorUsername, &comment.PhotoID, &comment.CommentText, &comment.UploadDate); err != nil {
 			return nil, fmt.Errorf("error scanning comment row: %w", err)
 		}
 		comments = append(comments, comment)
