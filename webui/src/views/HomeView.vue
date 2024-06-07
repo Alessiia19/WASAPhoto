@@ -88,7 +88,6 @@ export default {
 		formatDate(value) {
 			if (value) {
 				return new Date(value).toLocaleDateString('en-US', {
-					weekday: 'long', // "Monday"
 					year: 'numeric', // "2021"
 					month: 'long', // "July"
 					day: 'numeric', // "19"
@@ -153,6 +152,7 @@ export default {
 						}
 					});
 				}
+				console.log(this.photos)
 			} catch (error) {
 				console.error('Error while retrieving user stream: ', error);
 				this.photos = []
@@ -238,6 +238,7 @@ export default {
 			<h1 class="app-title unselectable">WASAPhoto</h1>
 		</header>
 
+		<!-- Main content area -->
 		<main class="col-md-9 ms-sm-auto mt-3 col-lg-10 px-md-4 main-content">
 			<div class="home-content">
 				<div class="header-home-content border-bottom pb-3">
@@ -263,6 +264,8 @@ export default {
 					</div>
 				</div>
 
+				<!-- Stream content -->
+				<!-- No content message -->
 				<div v-if="!photos" class="no-content-message">
 					<lottie-player :src="animationData" background="transparent" speed="0.5"
 						style="width: 300px; height: 300px;" loop autoplay></lottie-player>
@@ -281,6 +284,7 @@ export default {
 
 						<!-- Photo infos -->
 						<div class="stream-photo-info">
+							<!-- Photo author username  -->
 							<div class="photo-author">
 								<img class="author-image" :src="defaultProfilePic">
 								{{ photo.username }}
@@ -291,22 +295,36 @@ export default {
 								<div class="comments-list">
 									<div v-for="comment in photo.comments" :key="comment.commentID"
 										class="comment-container">
-										<p class="comment-text">
-											<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
-										</p>
-										<div class="comment-menu-icon" v-if="comment.isMyComment"
-											@click="toggleCommentMenu(comment.commentID)">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-												fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
-												<path
-													d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
-											</svg>
-											<ul v-if="activeCommentMenu === comment.commentID" class="dropdown-menu">
-												<li @click="deleteComment(photo.photoID, comment.commentID)">delete</li>
-											</ul>
+
+										<div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%">
+
+											<!-- Comment text -->
+											<p class="comment-text">
+												<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
+											</p>
+											<!-- Delete comment section -->
+											<div class="comment-menu-icon" v-if="comment.isMyComment"
+												@click="toggleCommentMenu(comment.commentID)">
+												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+													fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
+													<path
+														d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+												</svg>
+												<ul v-if="activeCommentMenu === comment.commentID"
+													class="dropdown-menu">
+													<li @click="deleteComment(photo.photoID, comment.commentID)">delete
+													</li>
+												</ul>
+											</div>
 										</div>
+
+
+										<!-- Comment Upload Date -->
+										<div class="photo-upload-date">{{ formatDate(comment.uploadDate) }}</div>
 									</div>
 								</div>
+
+								<!-- Add comment section -->
 								<div class="comment-input-container">
 									<textarea v-model="photo.newComment" placeholder="Add a comment..."
 										class="comment-input"></textarea>
@@ -322,6 +340,8 @@ export default {
 
 							<!-- Engagement stats -->
 							<div class="photo-engagement-stats">
+
+								<!-- Like section -->
 								<div class="heart-icon">
 									<svg v-if="photo.isLiked" @click="unlikePhoto(photo)"
 										xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -335,6 +355,8 @@ export default {
 											d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15" />
 									</svg>
 								</div>
+
+								<!-- Likes count -->
 								<p>{{ photo.likesCount }} Likes</p>
 								<div class="comment-icon">
 									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -343,10 +365,11 @@ export default {
 											d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105" />
 									</svg>
 								</div>
+								<!-- Comments count -->
 								<p>{{ photo.commentsCount }} Comments</p>
 							</div>
 
-							<!-- Upload Date -->
+							<!-- Photo Upload Date -->
 							<div class="photo-upload-date">{{ formatDate(photo.uploadDate) }}</div>
 						</div>
 					</div>
@@ -372,7 +395,7 @@ export default {
 	background-image: none;
 	background-color: #fff;
 	height: 70px;
-	box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+	box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
 }
 
 .all-rounded {
@@ -396,25 +419,25 @@ export default {
 }
 
 .back-to-top {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: #446ca0; 
-  color: white;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+	position: fixed;
+	bottom: 30px;
+	right: 30px;
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	background-color: #446ca0;
+	color: white;
+	border: none;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
 }
 
 .back-to-top:hover {
-  background-color: #365880; 
+	background-color: #365880;
 }
 
 .clear-search-icon {
@@ -432,8 +455,7 @@ export default {
 
 .comment-container {
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	flex-direction: column;
 	margin-bottom: 20px;
 	padding-right: 15px;
 	position: relative;
@@ -482,6 +504,7 @@ export default {
 	flex: 1;
 	word-wrap: break-word;
 	max-width: 493px;
+	margin-bottom: 0;
 }
 
 .dropdown-menu {

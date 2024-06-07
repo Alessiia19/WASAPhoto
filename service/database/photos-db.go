@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 )
 
 // CreatePhoto carica una nuova foto nel database.
@@ -141,10 +140,8 @@ func (db *appdbimpl) CommentPhoto(userID, photoID int, authorUsername string, c 
 		return c, fmt.Errorf("cannot comment a photo published by a user who has banned you")
 	}
 
-	uploadDate := time.Now()
-
 	// Aggiungi il commento alla tabella dei commenti.
-	result, err := db.c.Exec("INSERT INTO comments (userid, username, photoid, commentText, uploadDate) VALUES (?, ?, ?, ?, ?)", userID, authorUsername, photoID, c.CommentText, uploadDate)
+	result, err := db.c.Exec("INSERT INTO comments (userid, username, photoid, commentText, uploadDate) VALUES (?, ?, ?, ?, ?)", userID, authorUsername, photoID, c.CommentText, c.UploadDate)
 	if err != nil {
 		return c, fmt.Errorf("error inserting comment into database: %w", err)
 	}
@@ -165,7 +162,7 @@ func (db *appdbimpl) CommentPhoto(userID, photoID int, authorUsername string, c 
 	c.AuthorUsername = authorUsername
 	c.CommentID = int(commentID)
 	c.PhotoID = photoID
-	c.UploadDate = uploadDate
+
 	return c, nil
 }
 
