@@ -12,6 +12,8 @@ export default {
 			usernameWasModified: false,
 			isMyProfile: false,
 			isFollowed: false,
+			isFollowersModalOpen: false,
+			isFollowingModalOpen: false,
 			isBanned: false,
 			errormsg: null,
 			isPhotoPopupOpen: false,
@@ -177,6 +179,16 @@ export default {
 			return '';
 		},
 
+		async goToUserProfile(userID, username) {
+			console.log(userID, username)
+			if (userID) {
+				localStorage.setItem("userToSearchID", userID)
+				this.$router.push({ path: `/users/${username}` });
+			} else {
+				console.error('Errore: Nome utente non fornito.');
+			}
+		},
+
 		async handleRouteChange() {
 			if (!this.usernameWasModified) {
 				this.checkIfOwnProfile();
@@ -286,6 +298,7 @@ export default {
 			else if (this.usernameWasModified) {
 				this.usernameWasModified = false;
 			}
+
 		},
 
 		async openDeleteModal() {
@@ -333,6 +346,14 @@ export default {
 
 		toggleCommentMenu(commentID) {
 			this.activeCommentMenu = this.activeCommentMenu === commentID ? null : commentID;
+		},
+
+		toggleFollowersModal() {
+			this.isFollowersModalOpen = !this.isFollowersModalOpen;
+		},
+
+		toggleFollowingModal() {
+			this.isFollowingModalOpen = !this.isFollowingModalOpen;
 		},
 
 		async unbanUser() {
@@ -473,11 +494,11 @@ export default {
 
 					<!-- Followers, Following and Post count -->
 					<div class="profile-stats">
-						<p class="info">
+						<p class="info" @click="toggleFollowersModal" style="cursor: pointer;">
 							<span class="info-label">Followers:</span>
 							<span class="info-value">{{ userProfile.followersCount }}</span>
 						</p>
-						<p class="info">
+						<p class="info" @click="toggleFollowingModal" style="cursor: pointer;">
 							<span class="info-label">Following:</span>
 							<span class="info-value">{{ userProfile.followingCount }}</span>
 						</p>
@@ -516,6 +537,44 @@ export default {
 				<h4>Are you sure you want to delete this photo?</h4>
 				<button @click="confirmDelete" class="delete-button">Confirm</button>
 				<button @click="closeDeleteModal" class="cancel-button">Cancel</button>
+			</div>
+		</div>
+
+		<!-- Followers list modal -->
+		<div v-if="isFollowersModalOpen" class="modal" @click.self="toggleFollowersModal">
+			<div class="modal-content" @click.stop>
+				<h4 class="modal-title">Followers</h4>
+				<ul class="user-list">
+					<li v-for="follower in userProfile.followers" :key="follower.userID" class="user-item">
+						<img :src="follower.profilePic || defaultProfilePic" class="user-image">
+						<span class="user-username" @click="goToUserProfile(follower.userID, follower.username)">{{
+						follower.username }}</span>
+					</li>
+				</ul>
+				<svg @click="toggleFollowersModal" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+					fill="currentColor" class="bi bi-x-circle-fill close-icon" viewBox="0 0 16 16">
+					<path
+						d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
+				</svg>
+			</div>
+		</div>
+
+		<!-- Following list modal -->
+		<div v-if="isFollowingModalOpen" class="modal" @click.self="toggleFollowingModal">
+			<div class="modal-content" @click.stop>
+				<h4 class="modal-title">Following</h4>
+				<ul class="user-list">
+					<li v-for="following in userProfile.following" :key="following.userID" class="user-item">
+						<img :src="following.profilePic || defaultProfilePic" class="user-image">
+						<span class="user-username" @click="goToUserProfile(following.userID, following.username)">{{
+						following.username }}</span>
+					</li>
+				</ul>
+				<svg @click="toggleFollowingModal" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+					fill="currentColor" class="bi bi-x-circle-fill close-icon" viewBox="0 0 16 16">
+					<path
+						d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
+				</svg>
 			</div>
 		</div>
 
@@ -687,6 +746,16 @@ export default {
 	opacity: 0.75;
 }
 
+.close-icon {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	cursor: pointer;
+	width: 20px;
+	height: 20px;
+	fill: #333;
+}
+
 .delete-button {
 	background-color: red;
 	color: white;
@@ -781,6 +850,14 @@ export default {
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 	text-align: center;
 	width: 400px;
+	position: relative;
+}
+
+.modal-title {
+	font-weight: bold;
+	border-bottom: 1px solid #ccc;
+	padding-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 .photo-author-container {
@@ -1008,6 +1085,34 @@ export default {
 
 .unselectable {
 	user-select: none;
+}
+
+.user-image {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	object-fit: cover;
+	margin-right: 10px;
+}
+
+.user-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.user-list {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	max-height: 250px;
+	overflow-y: auto;
+}
+
+.user-username {
+	font-weight: bold;
+	font-size: 18px;
+	cursor: pointer;
 }
 
 .username {
