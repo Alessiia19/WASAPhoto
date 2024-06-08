@@ -423,11 +423,14 @@ export default {
 
 			<!-- User card -->
 			<div class="profile-card">
+
+				<!-- Profile photo -->
 				<div class="profile-photo">
 					<img :src="defaultProfilePic" class="profile-image">
 				</div>
-				<div class="profile-info">
 
+				<!-- Profile infos -->
+				<div class="profile-info">
 					<div class="username-section">
 
 						<!-- Username -->
@@ -452,7 +455,8 @@ export default {
 						</div>
 
 						<!-- Follow Button -->
-						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser" :disabled="isBanned">+
+						<button v-if="!isMyProfile && !isFollowed" class="follow-button" @click="followUser"
+							:disabled="isBanned">+
 							Follow </button>
 
 						<!-- Unfollow Button -->
@@ -467,6 +471,7 @@ export default {
 
 					</div>
 
+					<!-- Followers, Following and Post count -->
 					<div class="profile-stats">
 						<p class="info">
 							<span class="info-label">Followers:</span>
@@ -492,6 +497,7 @@ export default {
 				</div>
 			</div>
 
+			<!-- No content message -->
 			<div v-if="userProfile.uploadedPhotosCount === 0" class="no-posts-container">
 				<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi-camera"
 					viewBox="0 0 16 16">
@@ -504,6 +510,7 @@ export default {
 			</div>
 		</main>
 
+		<!-- Delete photo modal -->
 		<div v-if="showDeleteModal" class="modal">
 			<div class="modal-content">
 				<h4>Are you sure you want to delete this photo?</h4>
@@ -521,10 +528,16 @@ export default {
 
 				<!-- Photo popup infos -->
 				<div class="photo-popup-info">
+
+					<!-- Photo popup top section -->
 					<div class="photo-author-container">
+
+						<!-- Author username  -->
 						<div class="photo-author">
 							<img class="author-image" :src="defaultProfilePic">{{ selectedPhoto.username }}
 						</div>
+
+						<!-- Delete photo icon -->
 						<div class="trash-icon" v-if="isMyProfile" @click="openDeleteModal()">
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
 								class="bi bi-trash3" viewBox="0 0 16 16">
@@ -539,22 +552,33 @@ export default {
 						<div class="comments-list">
 							<div v-for="comment in selectedPhoto.comments" :key="comment.commentID"
 								class="comment-container">
-								<p class="comment-text">
-									<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
-								</p>
-								<div class="comment-menu-icon" v-if="comment.isMyComment"
-									@click="toggleCommentMenu(comment.commentID)">
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-										class="bi bi-three-dots" viewBox="0 0 16 16">
-										<path
-											d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
-									</svg>
-									<ul v-if="activeCommentMenu === comment.commentID" class="dropdown-menu">
-										<li @click="deleteComment(selectedPhoto.photoID, comment.commentID)">delete</li>
-									</ul>
+								<div
+									style="display: flex; flex-direction: row; justify-content: space-between; width: 100%">
+
+									<p class="comment-text">
+										<strong>{{ comment.authorUsername }}:</strong> {{ comment.commentText }}
+									</p>
+									<div class="comment-menu-icon" v-if="comment.isMyComment"
+										@click="toggleCommentMenu(comment.commentID)">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+											fill="currentColor" class="bi bi-three-dots" viewBox="0 0 16 16">
+											<path
+												d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+										</svg>
+										<ul v-if="activeCommentMenu === comment.commentID" class="dropdown-menu">
+											<li @click="deleteComment(selectedPhoto.photoID, comment.commentID)">delete
+											</li>
+										</ul>
+									</div>
 								</div>
+
+
+								<!-- Comment Upload Date -->
+								<div class="photo-upload-date">{{ formatDate(comment.uploadDate) }}</div>
 							</div>
 						</div>
+
+						<!-- Add a comment section -->
 						<div class="comment-input-container">
 							<textarea v-model="newComment" placeholder="Add a comment..."
 								class="comment-input"></textarea>
@@ -569,6 +593,8 @@ export default {
 					</div>
 
 					<div class="photo-engagement-stats">
+
+						<!-- Like -->
 						<div class="photo-popup-heart-icon">
 							<svg v-if="selectedPhoto.isLiked" @click="unlikePhoto(selectedPhoto)"
 								xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -589,8 +615,10 @@ export default {
 								d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105" />
 						</svg>
 
+						<!-- Comments count -->
 						<div>{{ selectedPhoto.commentsCount }} Comments</div>
 					</div>
+
 					<!-- Upload Date -->
 					<div class="photo-upload-date">{{ formatDate(selectedPhoto.uploadDate) }}</div>
 				</div>
@@ -604,7 +632,7 @@ export default {
 	/*background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);*/
 	background-image: none;
 	background-color: #fff;
-	box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+	box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
 	height: 70px;
 }
 
@@ -868,7 +896,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	width: calc(100%-280px);
+	width: calc(100% - 280px);
 	margin-left: 280px;
 }
 

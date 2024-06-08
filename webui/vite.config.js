@@ -20,6 +20,17 @@ export default defineConfig(({ command, mode, ssrBuild }) => {
 				"@": fileURLToPath(new URL("./src", import.meta.url)),
 			},
 		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						lottie: ["lottie-web"],
+						vendor: ["vue", "axios"],
+					},
+				},
+			},
+			chunkSizeWarningLimit: 1000
+		},
 	};
 	ret.define = {
 		// Do not modify this constant, it is used in the evaluation.
