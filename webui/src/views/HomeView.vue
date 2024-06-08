@@ -24,7 +24,7 @@ export default {
 			photos: [
 				{
 					photoID: 0,
-					authorID: 0,
+					userID: 0,
 					username: '',
 					imageData: '',
 					uploadDate: '',
@@ -99,10 +99,11 @@ export default {
 			return '';
 		},
 
-		async goToUserProfile(userToSearch) {
-			if (userToSearch) {
-				localStorage.setItem("userToSearchID", userToSearch.userID)
-				this.$router.push({ path: `/users/${userToSearch.username}` });
+		async goToUserProfile(userID, username) {
+			console.log(userID, username)
+			if (userID) {
+				localStorage.setItem("userToSearchID", userID)
+				this.$router.push({ path: `/users/${username}` });
 			} else {
 				console.error('Errore: Nome utente non fornito.');
 			}
@@ -257,7 +258,7 @@ export default {
 								d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z" />
 						</svg>
 						<ul v-if="users.length" class="search-dropdown pl-3">
-							<li v-for="user in users" :key="user.userID" @click="goToUserProfile(user)">
+							<li v-for="user in users" :key="user.userID" @click="goToUserProfile(user.userID, user.username)">
 								{{ user.username }}
 							</li>
 						</ul>
@@ -287,7 +288,9 @@ export default {
 							<!-- Photo author username  -->
 							<div class="photo-author">
 								<img class="author-image" :src="defaultProfilePic">
-								{{ photo.username }}
+								<p class="photo-author-username" @click="goToUserProfile(photo.userID, photo.username)">
+									{{ photo.username}}
+								</p>
 							</div>
 
 							<!-- Comment section -->
@@ -568,6 +571,10 @@ export default {
 	display: flex;
 	flex-direction: row;
 	margin-bottom: 10px;
+}
+
+.photo-author-username {
+	cursor: pointer;
 }
 
 .photo-comments {
