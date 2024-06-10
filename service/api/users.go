@@ -34,35 +34,33 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	var user User
 	// Extract the username from the request body.
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		// If there is an error decoding the username, returns a Bad Request status.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("setUsername: Invalid username format. Please follow the specified requirements.")
 		return
 	}
-	// Check if the username meets the requirements
+
+	// Check if the username meets the requirements.
 	if !isValidUsername(user.Username) {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.Error("Login: Invalid username format. Please follow the specified requirements.")
 		return
 	}
 
-	// Aggiorna il nome utente nel database.
+	// Update the username in the database.
 	if err := rt.db.UpdateUsername(userID, user.Username); err != nil {
-		// Se c'è un errore nell'aggiornare l'username, restituisci un errore del server interno.
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("updateUsername: Error updating username in the database.")
 		return
 	}
 
-	// Ritorna lo stato OK.
 	w.WriteHeader(http.StatusOK)
 }
 
-// getUserProfile ritorna il profilo dell'utente specificato
+// getUserProfile returns the profile of the specified user.
 func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Ottieni l'ID dell'user di cui si vuole visualizzare il profilo dal path
+	// Extract the ID of the user whose profile is to be viewed from the path.
 	requestedUserID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -70,7 +68,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	// Ottieni l'ID dell'user che vuole effettuare l'operazione
+	// Extract the ID of the user making the request.
 	requestingUserID, err := strconv.Atoi(extractBearer(r.Header.Get("Authorization")))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -86,15 +84,15 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	// Chiamare la funzione del database per ottenere i dettagli del profilo dell'utente
+	// Call the database function to get the user profile details.
 	profile, err := rt.db.GetUserProfile(requestingUserID, requestedUserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se l'utente non esiste, restituisci un errore 404.
+			// Return a 404 error if the user does not exist.
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("getUserProfile: Error getting user profile.")
 		return
 	}
@@ -103,11 +101,11 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	_ = json.NewEncoder(w).Encode(profile)
 }
 
-// followUser aggiunge un utente alla lista di following dell'utente specificato.
+// followUser adds a user to the specified user's following list.
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che compie l'azione (follower) dal path.
+	// Extract the ID of the user making the request.
 	followerID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -123,7 +121,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	// Estrai l'ID dell'utente che si desidera seguire dalla richiesta.
+	// Extract the user ID of the user to be followed from the request body.
 	var followingUser User
 	if err := json.NewDecoder(r.Body).Decode(&followingUser); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -131,22 +129,21 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	// Esegui l'operazione di follow nel database.
+	// Follow the user.
 	if err := rt.db.FollowUser(followerID, followingUser.UserID); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("followUser: Error following user in the database.")
 		return
 	}
 
-	// Ritorna lo stato OK.
 	w.WriteHeader(http.StatusOK)
 }
 
-// unfollowUser rimuove un utente dalla lista di following dell'utente specificato.
+// unfollowUser removes a user from the specified user's following list.
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Ottieni gli ID dal path
+	// Extract the ID of the user making the request.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -162,6 +159,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
+	// Extract the user ID of the user to be unfollowed.
 	followingID, err := strconv.Atoi(ps.ByName("followingid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -169,37 +167,35 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Controllo se l'utente sta cercando di unfollow se stesso
+	// Check if the user is trying to unfollow themselves.
 	if userID == followingID {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.Error("unfollowUser: Cannot unfollow yourself.")
 		return
 	}
 
-	// Chiamare la funzione di database per eseguire l'operazione di unfollow
+	// Unfollow the user.
 	if err := rt.db.UnfollowUser(userID, followingID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se l'utente o il followingID non esiste, restituisci un errore 404.
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("unfollowUser: User or following user not found.")
 			return
 		}
 
-		// Altri errori
-		w.WriteHeader(http.StatusInternalServerError)
+		// Other errors.
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unfollowUser: Error unfollowing user.")
 		return
 	}
 
-	// Rispondi con uno status ok
 	w.WriteHeader(http.StatusOK)
 }
 
-// banUser aggiunge un utente alla lista di utenti bloccati dall'utente specificato.
+// banUser adds a user to the specified user's banned list.
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che compie l'azione dal path.
+	// Extract the ID of the user making the request.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -215,7 +211,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	// Estrai l'ID dell'utente che si desidera bloccare dalla richiesta.
+	// Extract the user ID of the user to be banned from the request body.
 	var bannedUser User
 	if err := json.NewDecoder(r.Body).Decode(&bannedUser); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -223,22 +219,21 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	// Esegui l'operazione di ban nel database.
+	// Ban the user
 	if err := rt.db.BanUser(userID, bannedUser.UserID); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("banUser: Error banning user in the database.")
 		return
 	}
 
-	// Ritorna lo stato OK.
 	w.WriteHeader(http.StatusCreated)
 }
 
-// unfollowUser rimuove un utente dalla lista di following dell'utente specificato.
+// unBanUser removes a user from the specified user's banned list.
 func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Ottieni gli ID dal path
+	// Extract the ID of the user making the request.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -254,6 +249,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
+	// Extract the user ID of the banned user.
 	bannedUserID, err := strconv.Atoi(ps.ByName("banneduserid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -261,37 +257,36 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	// Controllo se l'utente sta cercando di unban se stesso
+	// Check if the user is trying to unban themselves.
 	if userID == bannedUserID {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.Error("unbanUser: Cannot unban yourself.")
 		return
 	}
 
-	// Chiamare la funzione di database per eseguire l'operazione di unban
+	// Unban the user.
 	if err := rt.db.UnbanUser(userID, bannedUserID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se l'utente o il bannedUserID non esiste, restituisci un errore 404.
+			// Return a NotFound status if either the user or the banned user does not exist.
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("unbanUser: User or banned user not found.")
 			return
 		}
 
-		// Altri errori
-		w.WriteHeader(http.StatusInternalServerError)
+		// Other errors.
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unbanUser: Error unbanning user.")
 		return
 	}
 
-	// Rispondi con uno status ok
 	w.WriteHeader(http.StatusOK)
 }
 
-// getMyStream ritorna lo stream dell'utente (foto dalle persone che l'utente segue)
+// getMyStream returns the stream of the user, consisting of photos from people the user follows.
 func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Ottieni l'ID dell'user dal path
+	// Extract the ID of the user making the request.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -306,15 +301,15 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Chiamare la funzione del database per ottenere lo stream dell'user
+	// Call the database function to get the user's stream.
 	stream, err := rt.db.GetMyStream(userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se l'utente non esiste, restituisci un errore 404.
+			// Return a NotFound status if the user does not exist.
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("getMyStream: Error getting user profile.")
 		return
 	}
@@ -327,10 +322,10 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Ottieni l'userID dell'utente che vuole effettuare l'operazione dall'authorization
+	// Extract the ID of the user making the request from the authorization.
 	userIDstr := extractBearer(r.Header.Get("Authorization"))
 
-	// Converti l'ID utente da stringa a intero
+	// Convert the user ID from string to integer.
 	userID, err := strconv.Atoi(userIDstr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -338,7 +333,7 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 
-	// Ottieni la sottostringa di ricerca dall'URL query parameter "username"
+	// Retrieve the search substring from the URL query parameter "username".
 	query := r.URL.Query().Get("username")
 	if query == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -346,15 +341,14 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		return
 	}
 
-	// Chiama la funzione del database per ottenere gli utenti corrispondenti
+	// Call the database function to get users matching the query substring.
 	users, err := rt.db.GetUsers(userID, query)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("getUsers: Error fetching users from database")
 		return
 	}
 
-	// Invia la risposta JSON con la lista degli utenti trovati
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(users)
 }
@@ -363,7 +357,7 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 func (rt *_router) getBanStatus(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che compie l'azione dal path.
+	// Extract the ID of the user making the request.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -379,7 +373,7 @@ func (rt *_router) getBanStatus(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Estrai l'ID dell'utente di cui si vuole vedere il ban status.
+	// Extract the ID of the user to check.
 	userToCheckID, err := strconv.Atoi(ps.ByName("banneduserid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -387,15 +381,14 @@ func (rt *_router) getBanStatus(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Chiama la funzione del database per ottenere il ban status
+	// Call the database function to get the ban status.
 	isBanned, err := rt.db.GetBanStatus(userID, userToCheckID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("getBanStatus: Error while checking ban status")
 		return
 	}
 
-	// Invia la risposta JSON con il risultato del check
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(isBanned)
 }
