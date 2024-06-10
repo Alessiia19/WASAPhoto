@@ -16,13 +16,12 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	//  Extract the username from the request body.
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		//  If there is an error decoding the username, returns a Bad Request status.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("Login: Invalid request")
 		return
 	}
 
-	// Check if the username meets the requirements
+	// Check if the username meets the requirements.
 	if !isValidUsername(user.Username) {
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.Error("Login: Invalid username format. Please follow the specified requirements.")

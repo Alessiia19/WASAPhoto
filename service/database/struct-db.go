@@ -8,9 +8,7 @@ type User struct {
 	Username string `json:"username"` // User's username
 }
 
-// Photo rappresenta un oggetto foto che include il nome dell'autore, l'URL dell'immagine, il numero di
-// "mi piace" e commenti, e dettagli sugli utenti che hanno messo "mi piace" o commentato, compresi
-// i commenti stessi.
+// Photo structure
 type Photo struct {
 	UserID        int       `json:"userID"`
 	PhotoID       int       `json:"photoID"`
@@ -21,6 +19,8 @@ type Photo struct {
 	CommentsCount int       `json:"commentsCount"`
 }
 
+// CompletePhoto represents a photo object that includes the author's username, the image URL, the number of "likes" and comments,
+// and details about users who have liked or commented, including the likes and comments themselves.
 type CompletePhoto struct {
 	UserID        int       `json:"userID"`
 	PhotoID       int       `json:"photoID"`
@@ -33,13 +33,14 @@ type CompletePhoto struct {
 	Comments      []Comment `json:"comments"`
 }
 
+// Like structure
 type Like struct {
 	LikeID  int `json:"likeID"`
 	UserID  int `json:"userID"`
 	PhotoID int `json:"photoID"`
 }
 
-// Comment rappresenta un commento su una foto.
+// Comment structure
 type Comment struct {
 	CommentID      int       `json:"commentID"`
 	AuthorID       int       `json:"authorID"`
@@ -49,6 +50,7 @@ type Comment struct {
 	UploadDate     time.Time `json:"uploadDate"`
 }
 
+// Profile structure that includes the number of "followers", "following" and photo uploaded, including their arrays
 type Profile struct {
 	UserID              int             `json:"userID"`              // User's identifier
 	Username            string          `json:"username"`            // User's username

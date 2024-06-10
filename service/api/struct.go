@@ -75,6 +75,7 @@ type CompletePhoto struct {
 	Comments      []Comment `json:"comments"`
 }
 
+// Profile structure that includes the number of "followers", "following" and photo uploaded, including their arrays
 type Profile struct {
 	UserID              int             `json:"userID"`              // User's identifier
 	Username            string          `json:"username"`            // User's username
