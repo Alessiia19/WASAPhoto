@@ -50,17 +50,6 @@ export default {
 	},
 
 	methods: {
-		async refresh() {
-			this.loading = true;
-			this.errormsg = null;
-			try {
-				let response = await this.$axios.get("/");
-				this.some_data = response.data;
-			} catch (e) {
-				this.errormsg = e.toString();
-			}
-			this.loading = false;
-		},
 
 		backToTop() {
 			window.scrollTo({
@@ -88,12 +77,12 @@ export default {
 		formatDate(value) {
 			if (value) {
 				return new Date(value).toLocaleDateString('en-US', {
-					year: 'numeric', // "2021"
-					month: 'long', // "July"
-					day: 'numeric', // "19"
-					hour: '2-digit', // "02"
-					minute: '2-digit', // "00"
-					hour12: true // use AM/PM
+					year: 'numeric', 
+					month: 'long', 
+					day: 'numeric', 
+					hour: '2-digit', 
+					minute: '2-digit', 
+					hour12: true 
 				});
 			}
 			return '';
@@ -105,12 +94,12 @@ export default {
 				localStorage.setItem("userToSearchID", userID)
 				this.$router.push({ path: `/users/${username}` });
 			} else {
-				console.error('Errore: Nome utente non fornito.');
+				console.error('Errore: username not provided.');
 			}
 		},
 
 		handleOutsideClick(event) {
-			// Controlla se il click è fuori dalla search bar
+			// Check if the click is outside the search bar and clear the search if true.
 			const searchBar = this.$refs.searchBar;
 			if (searchBar && !searchBar.contains(event.target)) {
 				this.clearSearch();
@@ -118,6 +107,7 @@ export default {
 		},
 
 		handleScroll() {
+			// Show the "Back to Top" button when the user scrolls down 200 pixels.
 			this.showBackToTop = window.scrollY > 200;
 		},
 
@@ -144,16 +134,17 @@ export default {
 				if (this.photos) {
 					this.photos.forEach(photo => {
 						if (photo.comments) {
+							// Check and update each comment to see if it belongs to the logged-in user.
 							photo.comments.forEach(comment => {
 								comment.isMyComment = comment.authorID === parseInt(this.userID);
 							});
 						}
 						if (photo.likes) {
+							// Check and update each photo to see if it is liked by the logged-in user
 							photo.isLiked = photo.likes.some(like => like.userID === parseInt(this.userID));
 						}
 					});
 				}
-				console.log(this.photos)
 			} catch (error) {
 				console.error('Error while retrieving user stream: ', error);
 				this.photos = []
@@ -199,6 +190,7 @@ export default {
 		},
 
 		async unlikePhoto(photo) {
+			// Find the like by the logged-in user on the specified photo.
 			const userLike = photo.likes.find(like => like.userID === parseInt(this.userID));
 			try {
 				let response = await this.$axios.delete('/users/' + this.userID + '/photos/' + photo.photoID + '/likes/' + userLike.likeID, {
@@ -226,7 +218,7 @@ export default {
 
 	watch: {
 		searchQuery() {
-			this.searchUsers(); // Chiama searchUsers ogni volta che searchQuery cambia
+			this.searchUsers(); // Call searchUsers whenever the searchQuery changes.
 		}
 	}
 };

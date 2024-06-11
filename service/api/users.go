@@ -35,21 +35,21 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	// Extract the username from the request body.
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		ctx.Logger.WithError(err).Error("setUsername: Invalid username format. Please follow the specified requirements.")
+		ctx.Logger.WithError(err).Error("setMyUserName: Invalid username.")
 		return
 	}
 
 	// Check if the username meets the requirements.
 	if !isValidUsername(user.Username) {
 		w.WriteHeader(http.StatusBadRequest)
-		ctx.Logger.Error("Login: Invalid username format. Please follow the specified requirements.")
+		ctx.Logger.Error("setMyUserName: Invalid username format. Please follow the specified requirements.")
 		return
 	}
 
 	// Update the username in the database.
 	if err := rt.db.UpdateUsername(userID, user.Username); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		ctx.Logger.WithError(err).Error("updateUsername: Error updating username in the database.")
+		ctx.Logger.WithError(err).Error("setMyUserName: Error updating username in the database.")
 		return
 	}
 
@@ -318,7 +318,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	_ = json.NewEncoder(w).Encode(stream)
 }
 
-// getUsers cerca gli utenti che contengono una specifica sottostringa nel loro username
+// getUsers searches for users whose usernames starts with a specified substring.
 func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -353,7 +353,7 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	_ = json.NewEncoder(w).Encode(users)
 }
 
-// getBanStatus controlla se un utente è stato bannato dall'utente attualmente loggato
+// getBanStatus checks if a user has been banned by the currently logged-in user.
 func (rt *_router) getBanStatus(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 

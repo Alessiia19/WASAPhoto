@@ -13,13 +13,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// uploadPhoto carica una nuova foto sul profilo dell'utente.
+// uploadPhoto uploads a new photo to the user's profile.
 func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
+	// Extract the user ID from the path parameters.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
-		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uploadPhoto: Invalid user ID format.")
 		return
@@ -34,21 +34,22 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var photo Photo
+	// Read the photo data from the request body.
 	photo.ImageData, err = io.ReadAll(r.Body)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("uploadPhoto: error reading body content")
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// Eseguire i controlli sul tipo di immagine
-	if !CheckImageType(photo.ImageData) && !ValidateImage(photo.ImageData) {
+	// Image type checks (only png or jpeg is accepted).
+	if !CheckImageType(photo.ImageData) {
 		ctx.Logger.Error("uploadPhoto: unsupported image format")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// Ottieni l'username
+	// Get the username of the user.
 	user, err := rt.db.GetUserDetails(userID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("uploadPhoto: error retrieving user details")
@@ -56,7 +57,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Aggiorna i dati della foto
+	// Update the photo data.
 	photo.UserID = userID
 	photo.Username = user.Username
 	photo.UploadDate = time.Now()
@@ -66,7 +67,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// Create the photo in the database
 	createdPhoto, err := rt.db.CreatePhoto(photo.PhotoToDatabase())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uploadPhoto: Error creating photo in the database.")
 		return
 	}
@@ -76,14 +77,13 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	_ = json.NewEncoder(w).Encode(photo)
 }
 
-// likePhoto aggiunge un like alla foto specificata.
+// likePhoto adds a like to the specified photo.
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che vuole mettere mi piace a una foto
+	// Extract the user ID from the path parameters.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
-		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("likePhoto: Invalid user ID format.")
 		return
@@ -97,7 +97,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 
-	// Estrai l'ID della foto dal path.
+	// Extract the photo ID from the path parameters.
 	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -106,22 +106,21 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	var like Like
-	// Esegui l'operazione di like nel database.
+	// Like the photo
 	if err := rt.db.LikePhoto(userID, photoID, like.LikeToDatabase()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se la foto non esiste, restituisci un errore 404.
+			// The photo does not exist, return a NotFound status.
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("likePhoto: Photo not found.")
 			return
 		}
 
-		// Altri errori
-		w.WriteHeader(http.StatusInternalServerError)
+		// Other errors
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("likePhoto: Error liking photo.")
 		return
 	}
 
-	// Ritorna lo stato OK.
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -129,10 +128,9 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che vuole rimuovere il mi piace da una foto
+	// Extract the user ID from the path parameters.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
-		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unlikePhoto: Invalid user ID format.")
 		return
@@ -146,7 +144,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Estrai l'ID della foto dal path.
+	// Extract the photo ID from the path parameters.
 	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -154,6 +152,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	// Extract the like ID from the path parameters.
 	likeID, err := strconv.Atoi(ps.ByName("likeid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -161,33 +160,31 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Esegui l'operazione di unlike nel database.
+	// Unlike photo.
 	if err := rt.db.UnlikePhoto(userID, photoID, likeID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se uno tra gli id ricercati non esiste restituisci un errore 404.
+			// If any of the input IDs do not exist, return a NotFound status.
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("unlikePhoto: Not found.")
 			return
 		}
 
-		// Altri errori
-		w.WriteHeader(http.StatusInternalServerError)
+		// Other errors.
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("unlikePhoto: Error removing like from a photo.")
 		return
 	}
 
-	// Respond with success message
 	w.WriteHeader(http.StatusOK)
 }
 
-// commentPhoto aggiunge un commento a una foto specificata.
+// commentPhoto adds a comment to the specified photo.
 func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che vuole commentare una foto
+	// Extract the user ID from the path parameters.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
-		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("commentPhoto: Invalid user ID format.")
 		return
@@ -201,7 +198,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Estrai l'ID della foto dal path.
+	// Extract the photo ID from the path parameters.
 	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -212,13 +209,12 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	var comment Comment
 	// Extract the comment from the request body.
 	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
-		// If there is an error decoding the comment, returns a Bad Request status.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("commentPhoto: Error decoding request body.")
 		return
 	}
 
-	// Ottieni l'username
+	// Get the username of the user.
 	user, err := rt.db.GetUserDetails(userID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("commentPhoto: error retrieving user details")
@@ -228,9 +224,10 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 	comment.UploadDate = time.Now()
 
+	// Comment photo
 	newComment, err := rt.db.CommentPhoto(userID, photoID, user.Username, comment.CommentToDatabase())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("commentPhoto: Error commenting on photo.")
 		return
 	}
@@ -238,7 +235,6 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	// Update the user data with the information from the database.
 	comment.CommentFromDatabase(newComment)
 
-	// Ritorna lo stato OK.
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(comment)
 }
@@ -247,10 +243,9 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che vuole rimuovere il commento da una foto
+	// Extract the user ID from the path parameters.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
-		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uncommentPhoto: Invalid user ID format.")
 		return
@@ -264,7 +259,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	// Estrai l'ID della foto dal path.
+	// Extract the photo ID from the path parameters.
 	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -272,6 +267,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
+	// Extract the comment ID from the path parameters.
 	commentID, err := strconv.Atoi(ps.ByName("commentid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -279,22 +275,21 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
-	// Esegui l'operazione di uncomment nel database.
+	// Uncomment photo.
 	if err := rt.db.UncommentPhoto(userID, photoID, commentID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se uno tra gli id ricercati non esiste restituisci un errore 404.
+			// If any of the input IDs do not exist, return a NotFound status.
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("uncommentPhoto: Not found.")
 			return
 		}
 
-		// Altri errori
-		w.WriteHeader(http.StatusInternalServerError)
+		// Altri Other errors.
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("uncommentPhoto: Error removing like from a photo.")
 		return
 	}
 
-	// Respond with success message
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -302,10 +297,9 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Estrai l'ID dell'utente che vuole rimuovere la foto
+	// Extract the user ID from the path parameters.
 	userID, err := strconv.Atoi(ps.ByName("userid"))
 	if err != nil {
-		// Se l'ID dell'utente non è un numero valido, restituisci un errore di formato.
 		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("deletePhoto: Invalid user ID format.")
 		return
@@ -319,7 +313,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Estrai l'ID della foto dal path.
+	// Extract the photo ID from the path parameters.
 	photoID, err := strconv.Atoi(ps.ByName("photoid"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -327,21 +321,20 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Rimuovi la foto dal database.
+	// Remove the photo from database.
 	if err := rt.db.DeletePhoto(userID, photoID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Se la foto non esiste, restituisci un errore 404.
+			// The photo does not exist, return a NotFound status.
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("deletePhoto: Photo not found.")
 			return
 		}
 
-		// Altri errori
-		w.WriteHeader(http.StatusInternalServerError)
+		// Other errors.
+		w.WriteHeader(http.StatusBadRequest)
 		ctx.Logger.WithError(err).Error("deletePhoto: Error removing photo.")
 		return
 	}
 
-	// Respond with success message
 	w.WriteHeader(http.StatusOK)
 }

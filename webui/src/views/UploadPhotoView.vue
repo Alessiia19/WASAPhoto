@@ -13,29 +13,19 @@ export default {
         }
     },
     methods: {
-        async refresh() {
-            this.loading = true;
-            this.errormsg = null;
-            try {
-                let response = await this.$axios.get("/");
-                this.some_data = response.data;
-            } catch (e) {
-                this.errormsg = e.toString();
-            }
-            this.loading = false;
-        },
 
-
-        // Metodo per gestire il caricamento del file selezionato
+        // Handle the selected file upload.
         handleFileUpload() {
+            // Retrieve the first file selected by the user from the file input reference.
             this.image = this.$refs.file.files[0];
+
+            // Create a URL for the selected file to show a preview
             this.previewImage = URL.createObjectURL(this.image);
+            
             this.errormsg = null;
             this.successmsg = null;
         },
 
-
-        // Metodo per effettuare il caricamento effettivo del file
         async uploadPhoto() {
             if (!this.image) {
                 this.errormsg = "Please select a photo to upload";
@@ -75,7 +65,6 @@ export default {
         <main class="container-fluid">
             <div class="row">
                 <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                    <!-- Aggiungi un'area per il caricamento della foto -->
                     <div class="mt-3">
                         <h1 class="h2 unselectable border-bottom pb-3" style="font-weight: bold; white-space: nowrap;">
                             Upload Photo</h1>
@@ -85,13 +74,13 @@ export default {
                         <div v-if="successmsg" class="text-success ml-1">{{ successmsg }}</div>
                         
 
-                        <!-- Aggiungi l'anteprima dell'immagine -->
+                        <!-- Preview image -->
                         <h5 v-if="previewImage">Preview:</h5>
                         <div v-if="previewImage" class="preview-photo-card">
                             <img :src="previewImage" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
 
-                        <!-- Aggiungi il pulsante di caricamento -->
+                        <!-- Upload photo button -->
                         <button v-if="previewImage" @click="uploadPhoto" class="btn btn-primary mt-3">Upload</button>
                     </div>
                 </div>
