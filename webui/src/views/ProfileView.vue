@@ -103,6 +103,7 @@ export default {
 		},
 
 		async checkIfOwnProfile() {
+			// Check if the current route username matches the logged-in user's username
 			const routeUsername = this.$route.params.username;
 			this.isMyProfile = (routeUsername === this.username);
 
@@ -180,12 +181,11 @@ export default {
 		},
 
 		async goToUserProfile(userID, username) {
-			console.log(userID, username)
 			if (userID) {
 				localStorage.setItem("userToSearchID", userID)
 				this.$router.push({ path: `/users/${username}` });
 			} else {
-				console.error('Errore: Nome utente non fornito.');
+				console.error('Error: username not provided');
 			}
 		},
 
@@ -199,8 +199,8 @@ export default {
 			}
 		},
 
+		// Call the validation function on every input.
 		handleUsernameInput() {
-			// Chiamata alla funzione di validazione durante ogni inserimento
 			this.validateUsername();
 		},
 
@@ -217,6 +217,7 @@ export default {
 			}
 		},
 
+		// Load profile data based on whether the profile is the user's own profile or another user's profile
 		async loadProfileData() {
 			if (this.isMyProfile) {
 				try {
@@ -231,13 +232,13 @@ export default {
 					this.$router.push({ path: '/users/' + this.username })
 
 				} catch (error) {
-					console.error('Errore nel recupero dei dati del profilo:', error);
+					console.error('Error retrieving profile data:', error);
 				}
 			}
 
 			else if (!this.isMyProfile) {
 				try {
-					// Verifica se l'utente attuale è stato bannato dall'utente di cui si sta cercando il profilo
+					// Check if the current user is banned by the profile user.
 					let responseBan = await this.$axios.get('/users/' + this.userToSearchID + '/banned-users/' + this.userID, {
 						headers: {
 							Authorization: "Bearer " + this.userToSearchID
@@ -248,10 +249,11 @@ export default {
 						return;
 					}
 				} catch (error) {
-					console.error('Errore durante il controllo del ban status:', error);
+					console.error('Error checking ban status:', error);
 				}
 
 				try {
+					// Load the profile data of the searched user.
 					let response = await this.$axios.get('/users/' + this.userToSearchID, {
 						headers: {
 							Authorization: "Bearer " + this.userID
@@ -260,9 +262,11 @@ export default {
 					this.userProfile = response.data;
 					this.username = response.data.username;
 					if (this.userProfile.followers) {
+						// Check if any follower in followers has a userID that matches the logged-in user's ID.
 						this.isFollowed = this.userProfile.followers.some(follower => follower.userID === parseInt(this.userID));
 					}
 					if (this.userProfile.uploadedPhotos) {
+						// Iterate over each uploaded photo to check if liked by the logged-in user.
 						this.userProfile.uploadedPhotos.map(photo => {
 							if (photo.likes) {
 								photo.isLiked = photo.likes.some(like => like.userID === parseInt(this.userID));
@@ -279,13 +283,13 @@ export default {
 						});
 						this.isBanned = responseBan.data
 					} catch (error) {
-						console.error('Errore durante il controllo del ban status:', error);
+						console.error('Error checking ban status:', error);
 					}
 
 					this.$router.push({ path: '/users/' + this.$route.params.username })
 
 				} catch (error) {
-					console.error('Errore nel recupero dei dati del profilo:', error);
+					console.error('Error retrieving profile data:', error);
 				}
 			}
 			if (this.selectedPhoto) {
@@ -316,11 +320,10 @@ export default {
 				return;
 			}
 			try {
-				// Inviare il nuovo commento al server
 				let response = await this.$axios.post('/users/' + this.userID + '/photos/' + photo.photoID + '/comments', { commentText: this.newComment }, {
 					headers: { Authorization: "Bearer " + this.userID }
 				});
-				this.newComment = ''; // Resetta l'input
+				this.newComment = '';
 				photo.commentsCount += 1;
 				this.loadProfileData();
 			} catch (error) {
@@ -338,7 +341,7 @@ export default {
 				this.errormsg = null;
 				this.usernameWasModified = true;
 			} catch (error) {
-				console.error('Errore nel salvare il nuovo username:', error);
+				console.error('Error saving the new username:', error);
 				this.errormsg = error.response && error.response.data.message ? error.response.data.message : 'Username not valid';
 			}
 
@@ -381,7 +384,7 @@ export default {
 		},
 
 		async unlikePhoto(photo) {
-			// Trova il like specifico fatto dall'utente loggato
+			// Find logged user like on the specified photo.
 			const userLike = photo.likes.find(like => like.userID === parseInt(this.userID));
 			try {
 				let response = await this.$axios.delete('/users/' + this.userID + '/photos/' + photo.photoID + '/likes/' + userLike.likeID, {
@@ -399,11 +402,13 @@ export default {
 
 		async updateSelectedPhoto(photoID) {
 			if (this.userProfile.uploadedPhotos) {
+				// Find the photo in the uploadedPhotos array that matches the provided photoID
 				const updatedPhoto = this.userProfile.uploadedPhotos.find(p => p.photoID === photoID);
 				if (updatedPhoto) {
 					this.selectedPhoto.likes = updatedPhoto.likes;
 					this.selectedPhoto.comments = updatedPhoto.comments;
 					if (this.selectedPhoto.comments) {
+						// Iterate through each comment to check which one belongs to the logged-in user.
 						this.selectedPhoto.comments.forEach(comment => {
 							comment.isMyComment = comment.authorID === parseInt(this.userID);
 						});
@@ -421,7 +426,7 @@ export default {
 				this.errormsg = "L'username deve essere compreso tra 3 e 16 caratteri.";
 				return false;
 			} else {
-				this.errormsg = null; // Resetta il messaggio di errore se la validazione ha successo
+				this.errormsg = null; // Reset error message if the username is valid.
 				return true;
 			}
 		},
@@ -688,7 +693,6 @@ export default {
 
 <style>
 .header {
-	/*background-image: linear-gradient(to bottom right, #f5dd90, #b97b90, #446ca0);*/
 	background-image: none;
 	background-color: #fff;
 	box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
@@ -885,8 +889,7 @@ export default {
 .photo-img {
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
-	/* Makes images cover the card area without distorting aspect ratio */
+	object-fit: cover; /* Makes images cover the card area without distorting aspect ratio */
 	position: absolute;
 }
 

@@ -1,8 +1,6 @@
 package api
 
 import (
-	"bytes"
-	"image"
 	"net/http"
 	"regexp"
 	"strings"
@@ -57,7 +55,7 @@ func isValidUsername(username string) bool {
 
 // --- PHOTO FORMAT VALIDATION ---
 
-// CheckImageType verifica che il contenuto sia di tipo PNG o JPG.
+// CheckImageType checks if the content is of type PNG or JPG.
 func CheckImageType(data []byte) bool {
 	contentType := http.DetectContentType(data)
 	switch contentType {
@@ -68,8 +66,10 @@ func CheckImageType(data []byte) bool {
 	}
 }
 
-// ValidateImage verifica che il file sia effettivamente un'immagine PNG o JPG.
+/*
+// ValidateImage checks if the file is actually a PNG or JPG image.
 func ValidateImage(data []byte) bool {
+	// Decode the image configuration to get the format
 	_, format, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
 		return false
@@ -77,3 +77,4 @@ func ValidateImage(data []byte) bool {
 
 	return format == "jpeg" || format == "png"
 }
+*/

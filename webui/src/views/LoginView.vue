@@ -11,52 +11,55 @@ export default {
   },
 
   methods: {
+
+    // Call the validation function on every input.
+    handleUsernameInput() {
+      this.validateUsername();
+    },
+
     async login() {
 
-      // Username validation
+      // Check if the username meets the requirements.
       if (!this.validateUsername()) {
         return;
       }
 
       try {
+        // Send a POST request to the server to initiate a session
         let response = await this.$axios.post("/session", { username: this.username.trim() })
 
-        // Dopo aver ricevuto l'user id dal backend setta i valori 
+        // After receiving the user ID from the backend, set the values in local storage.
         this.user = response.data
         localStorage.setItem("userID", this.user.userID)
         localStorage.setItem("username", this.user.username)
         localStorage.setItem("userToSearchID", this.userToSearchID)
         console.log("Localstorage:", localStorage)
 
-        // Redirect alla home dopo il login
+        // Redirect to the home page after login.
         this.$router.replace({ path: '/users/' + this.user.username + '/stream' })
 
       } catch (error) {
-        // Gestione degli errori
         this.errormsg = error.response.data.message
       }
     },
 
-    handleUsernameInput() {
-      // Chiamata alla funzione di validazione durante ogni inserimento
-      this.validateUsername();
-    },
-
+    // Username validation function.
     validateUsername() {
       const usernameRegex = /^[a-zA-Z0-9]+$/;
       if (!usernameRegex.test(this.username)) {
-        this.errormsg = "L'username deve contenere solo lettere e numeri.";
+        this.errormsg = "The username must contain only letters and numbers.";
         return false;
       } else if (this.username.trim().length < 3 || this.username.trim().length > 16) {
-        this.errormsg = "L'username deve essere compreso tra 3 e 16 caratteri.";
+        this.errormsg = "The username must be between 3 and 16 characters.";
         return false;
       } else {
-        this.errormsg = null; // Resetta il messaggio di errore se la validazione ha successo
+        this.errormsg = null; // Reset the error message if validation is successful
         return true;
       }
     },
 
     mounted() {
+      // If a username is stored in localStorage, redirect to the user's stream page.
       if (localStorage.getItem('username')) {
         this.$router.replace({ path: '/users/' + localStorage.getItem('username') + '/stream' });
       }
@@ -173,6 +176,6 @@ export default {
 }
 
 .unselectable {
-	user-select: none;
+  user-select: none;
 }
 </style>
