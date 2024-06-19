@@ -31,6 +31,16 @@ func (db *appdbimpl) UpdateUsername(userID int, newUsername string) error {
 		return fmt.Errorf("error updating username in database: %w", err)
 	}
 
+	_, err = db.c.Exec("UPDATE photos SET username = ? WHERE userid = ?", newUsername, userID)
+	if err != nil {
+		return fmt.Errorf("error updating username in database: %w", err)
+	}
+
+	_, err = db.c.Exec("UPDATE comments SET username = ? WHERE userid = ?", newUsername, userID)
+	if err != nil {
+		return fmt.Errorf("error updating username in database: %w", err)
+	}
+
 	return nil
 }
 
